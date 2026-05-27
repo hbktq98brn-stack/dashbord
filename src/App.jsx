@@ -28,7 +28,7 @@ export default function App() {
     <div className="max-w-7xl mx-auto p-4 md:p-8 space-y-6">
       <header className="mb-2">
         <h1 className="text-3xl font-light text-gray-800">Управленческий дашборд</h1>
-        <p className="text-gray-500">Департамент интеграции и контроля</p>
+        <p className="text-gray-500">Департамент управления делами и цифровой трансформации</p>
       </header>
       <TabBar active={activeTab} onSelect={setActiveTab} />
       {renderTab()}
