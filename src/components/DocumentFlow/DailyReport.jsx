@@ -1,4 +1,7 @@
 import React, { useState } from 'react';
+import {
+  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer
+} from 'recharts';
 
 export default function DailyReport({ employees, reports, onSubmit }) {
   const [selectedEmp, setSelectedEmp] = useState('');
@@ -23,6 +26,16 @@ export default function DailyReport({ employees, reports, onSubmit }) {
     acc[emp.id] = reports.some(r => r.employeeId === emp.id && r.date.startsWith(today));
     return acc;
   }, {});
+
+  // Данные для диаграммы загрузки за сегодня
+  const todayLoad = employees
+    .map(emp => {
+      const total = reports
+        .filter(r => r.employeeId === emp.id && r.date.startsWith(today))
+        .reduce((sum, r) => sum + (r.hours || 0), 0);
+      return { name: emp.name, hours: total };
+    })
+    .filter(item => item.hours > 0);
 
   return (
     <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
@@ -66,6 +79,25 @@ export default function DailyReport({ employees, reports, onSubmit }) {
       </form>
       <div className="mt-4 text-xs text-gray-400">
         Галочка — отчёт сдан сегодня
+      </div>
+
+      {/* Диаграмма загрузки за сегодня */}
+      <div className="mt-6">
+        <h3 className="text-sm font-semibold text-gray-600 mb-2">
+          Загрузка за сегодня (часы)
+        </h3>
+        {todayLoad.length > 0 ? (
+          <ResponsiveContainer width="100%" height={Math.max(todayLoad.length * 40, 80)}>
+            <BarChart data={todayLoad} layout="vertical" margin={{ left: 10 }}>
+              <XAxis type="number" />
+              <YAxis type="category" dataKey="name" width={150} />
+              <Tooltip />
+              <Bar dataKey="hours" fill="#3b82f6" barSize={20} />
+            </BarChart>
+          </ResponsiveContainer>
+        ) : (
+          <p className="text-xs text-gray-400">Сегодня ещё никто не отчитался</p>
+        )}
       </div>
     </div>
   );
