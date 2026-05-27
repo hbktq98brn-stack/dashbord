@@ -1,27 +1,28 @@
-import React, { useState } from 'react'
+import React, { useState } from 'react';
 
 export default function DailyReport({ employees, reports, onSubmit }) {
-  const [selectedEmp, setSelectedEmp] = useState('')
-  const [comment, setComment] = useState('')
-  const [hours, setHours] = useState('')
-  const [submittedEmp, setSubmittedEmp] = useState(null)
+  const [selectedEmp, setSelectedEmp] = useState('');
+  const [comment, setComment] = useState('');
+  const [hours, setHours] = useState('');
+  const [submittedEmp, setSubmittedEmp] = useState(null);
 
   const handleSubmit = (e) => {
-    e.preventDefault()
-    if (!selectedEmp || !comment || !hours) return
-    onSubmit(Number(selectedEmp), comment, parseFloat(hours))
-    setSubmittedEmp(Number(selectedEmp))
-    setComment('')
-    setHours('')
-    setSelectedEmp('')
-    setTimeout(() => setSubmittedEmp(null), 2000)
-  }
+    e.preventDefault();
+    if (!selectedEmp || !comment || !hours) return;
+    onSubmit(Number(selectedEmp), comment, parseFloat(hours));
+    setSubmittedEmp(Number(selectedEmp));
+    setComment('');
+    setHours('');
+    setSelectedEmp('');
+    setTimeout(() => setSubmittedEmp(null), 2000);
+  };
 
-  const today = new Date().toISOString().slice(0, 10)
+  // Проверяем, сдал ли сотрудник отчёт сегодня
+  const today = new Date().toISOString().slice(0, 10);
   const reportStatus = employees.reduce((acc, emp) => {
-    acc[emp.id] = reports[emp.id]?.date === today
-    return acc
-  }, {})
+    acc[emp.id] = reports.some(r => r.employeeId === emp.id && r.date.startsWith(today));
+    return acc;
+  }, {});
 
   return (
     <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
@@ -67,5 +68,5 @@ export default function DailyReport({ employees, reports, onSubmit }) {
         Галочка — отчёт сдан сегодня
       </div>
     </div>
-  )
+  );
 }
