@@ -5,14 +5,10 @@ import KanbanBoard from './KanbanBoard';
 import LoadBalance from './LoadBalance';
 import Performance from './Performance';
 import Analytics from './Analytics';
+import LogViewer from '../LogViewer';
+import { employees as fullEmployees } from '../../data/employees';
 
-const employees = [
-  { id: 1, name: 'Анна Иванова' },
-  { id: 2, name: 'Пётр Смирнов' },
-  { id: 3, name: 'Ольга Орлова' },
-  { id: 4, name: 'Дмитрий Соколов' }
-];
-
+// Первоначальные письма (как раньше)
 const initialEmails = [
   { id: 101, subject: 'Запрос КП от клиента А', assignee: 1, status: 'new', deadline: new Date(Date.now() + 3600000).toISOString(), overdue: false },
   { id: 102, subject: 'Согласование договора', assignee: 2, status: 'in_progress', deadline: new Date(Date.now() - 86400000).toISOString(), overdue: true },
@@ -20,17 +16,45 @@ const initialEmails = [
   { id: 104, subject: 'Внутренний регламент', assignee: 4, status: 'review', deadline: new Date(Date.now() - 172800000).toISOString(), overdue: true }
 ];
 
-const initialTasks = [
-  { id: 1, title: 'Подготовить ответ на №102', column: 'in_progress', assignee: 2 },
-  { id: 2, title: 'Разобрать КП №101', column: 'new', assignee: 1 },
-  { id: 3, title: 'Ответ по жалобе', column: 'review', assignee: 3 }
-];
+// Ключи для localStorage
+const STORAGE_TASKS = 'dashboard_kanban_tasks';
+const STORAGE_REPORTS = 'dashboard_daily_reports';
+
+// Функция чтения из localStorage
+function loadFromStorage(key, fallback) {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : fallback;
+  } catch (e) {
+    return fallback;
+  }
+}
+
+// Функция сохранения в localStorage
+function saveToStorage(key, data) {
+  try {
+    localStorage.setItem(key, JSON.stringify(data));
+  } catch (e) {
+    // игнорируем ошибки квоты
+  }
+}
 
 export default function DocumentFlow() {
   const [emails, setEmails] = useState(initialEmails);
-  const [tasks, setTasks] = useState(initialTasks);
-  const [reports, setReports] = useState({});
+  const [tasks, setTasks] = useState(() => loadFromStorage(STORAGE_TASKS, []));
+  const [reports, setReports] = useState(() => loadFromStorage(STORAGE_REPORTS, []));
 
+  // Сохраняем задачи при изменении
+  useEffect(() => {
+    saveToStorage(STORAGE_TASKS, tasks);
+  }, [tasks]);
+
+  // Сохраняем отчёты при изменении
+  useEffect(() => {
+    saveToStorage(STORAGE_REPORTS, reports);
+  }, [reports]);
+
+  // Имитация изменения статусов писем (как раньше)
   useEffect(() => {
     const interval = setInterval(() => {
       setEmails(prev => prev.map(email => {
@@ -45,22 +69,51 @@ export default function DocumentFlow() {
     return () => clearInterval(interval);
   }, []);
 
+  // Обработчик нового отчёта
   const handleReportSubmit = (employeeId, comment, hours) => {
-    const today = new Date().toISOString().slice(0, 10);
-    setReports(prev => ({ ...prev, [employeeId]: { date: today, comment, hours } }));
+    const newReport = {
+      id: Date.now(),
+      employeeId,
+      comment,
+      hours,
+      date: new Date().toISOString() // дата создания
+    };
+    setReports(prev => [newReport, ...prev]);
+  };
+
+  // Обработчики для канбан-задач
+  const addTask = (task) => {
+    setTasks(prev => [...prev, { ...task, id: Date.now() }]);
+  };
+
+  const updateTaskStatus = (taskId, newColumn) => {
+    setTasks(prev => prev.map(t => t.id === taskId ? { ...t, column: newColumn } : t));
   };
 
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <EmailPulse emails={emails} />
-        <DailyReport employees={employees} reports={reports} onSubmit={handleReportSubmit} />
+        <DailyReport employees={fullEmployees} reports={reports} onSubmit={handleReportSubmit} />
       </div>
-      <KanbanBoard tasks={tasks} employees={employees} />
+
+      {/* Кнопка просмотра логов всех отчётов */}
+      <div className="text-right">
+        <LogViewer reports={reports} employees={fullEmployees} />
+      </div>
+
+      <KanbanBoard
+        tasks={tasks}
+        employees={fullEmployees}
+        onAddTask={addTask}
+        onUpdateTask={updateTaskStatus}
+      />
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <LoadBalance emails={emails} employees={employees} />
-        <Performance employees={employees} emails={emails} />
+        <LoadBalance reports={reports} employees={fullEmployees} />
+        <Performance emails={emails} tasks={tasks} employees={fullEmployees} />
       </div>
+
       <Analytics />
     </div>
   );
