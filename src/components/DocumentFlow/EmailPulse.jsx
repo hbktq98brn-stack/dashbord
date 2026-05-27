@@ -16,7 +16,7 @@ export default function EmailPulse({ emails }) {
 
   return (
     <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-      <h2 className="text-lg font-semibold text-gray-700 mb-4">Пульт контроля СЭД</h2>
+      <h2 className="text-lg font-semibold text-gray-700 mb-4">Контроль СЭД</h2>
       <div className="flex items-center gap-6">
         <PieChart width={140} height={140}>
           <Pie data={data} innerRadius={45} outerRadius={65} dataKey="value">
