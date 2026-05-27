@@ -1,3 +1,4 @@
+import ReportModal from '../ReportModal';
 import React, { useState, useEffect } from 'react';
 import EmailPulse from './EmailPulse';
 import DailyReport from './DailyReport';
@@ -6,6 +7,10 @@ import LoadBalance from './LoadBalance';
 import Performance from './Performance';
 import Analytics from './Analytics';
 import LogViewer from '../LogViewer';
+<div className="flex items-center gap-4">
+  <LogViewer reports={reports} employees={fullEmployees} />
+  <ReportModal employees={fullEmployees} reports={reports} tasks={tasks} />
+</div>
 import { employees as fullEmployees } from '../../data/employees';
 
 // Первоначальные письма (как раньше)
