@@ -3,6 +3,51 @@ import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer
 } from 'recharts';
 
+// Форматирование даты для заголовка
+const formatDate = (date) =>
+  date.toLocaleDateString('ru', { day: 'numeric', month: 'long', year: 'numeric' });
+
+// Формирование заголовка сводки
+const getReportTitle = (periodKey, startDate, endDate) => {
+  const endStr = formatDate(endDate);
+  switch (periodKey) {
+    case 'day':
+      return `Сводка о результатах работы ОИТ и ОЦТ за ${endStr}`;
+    case 'week':
+      return `Сводка о результатах работы ОИТ и ОЦТ за неделю с ${formatDate(startDate)} по ${endStr}`;
+    case 'month':
+      return `Сводка о результатах работы ОИТ и ОЦТ за месяц с ${formatDate(startDate)} по ${endStr}`;
+    case 'year':
+      return `Сводка о результатах работы ОИТ и ОЦТ за год с ${formatDate(startDate)} по ${endStr}`;
+    default:
+      return `Сводка о результатах работы ОИТ и ОЦТ за ${endStr}`;
+  }
+};
+
+// Получение диапазона дат
+const getDateRange = (periodKey) => {
+  const now = new Date();
+  const end = new Date(now);
+  const start = new Date(now);
+  switch (periodKey) {
+    case 'day':
+      start.setHours(0, 0, 0, 0);
+      break;
+    case 'week':
+      start.setDate(now.getDate() - 7);
+      break;
+    case 'month':
+      start.setMonth(now.getMonth() - 1);
+      break;
+    case 'year':
+      start.setFullYear(now.getFullYear() - 1);
+      break;
+    default:
+      start.setHours(0, 0, 0, 0);
+  }
+  return { start, end };
+};
+
 export default function DailyReport({ employees, reports, onSubmit }) {
   const [selectedEmp, setSelectedEmp] = useState('');
   const [comment, setComment] = useState('');
@@ -10,9 +55,11 @@ export default function DailyReport({ employees, reports, onSubmit }) {
   const [submittedEmp, setSubmittedEmp] = useState(null);
 
   // AI-состояния
-  const [showAiModal, setShowAiModal] = useState(false);      // окно с ключом и результатом
-  const [apiKeyInput, setApiKeyInput] = useState('');         // поле ввода ключа
-  const [aiSummary, setAiSummary] = useState('');             // текст сводки
+  const [aiPeriod, setAiPeriod] = useState('day');
+  const [showAiModal, setShowAiModal] = useState(false);
+  const [apiKeyInput, setApiKeyInput] = useState('');
+  const [aiSummary, setAiSummary] = useState('');
+  const [aiReportTitle, setAiReportTitle] = useState('');
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [aiError, setAiError] = useState('');
 
@@ -27,6 +74,7 @@ export default function DailyReport({ employees, reports, onSubmit }) {
     setTimeout(() => setSubmittedEmp(null), 2000);
   };
 
+  // Ежедневная статистика для формы и диаграммы
   const today = new Date().toISOString().slice(0, 10);
   const reportStatus = employees.reduce((acc, emp) => {
     acc[emp.id] = reports.some(r => r.employeeId === emp.id && r.date.startsWith(today));
@@ -42,26 +90,47 @@ export default function DailyReport({ employees, reports, onSubmit }) {
     })
     .filter(item => item.hours > 0);
 
-  // Генерация AI-сводки
+  // Генерация AI-сводки с новым промптом
   const generateAiSummary = useCallback(async () => {
     if (!apiKeyInput.trim()) {
       setAiError('Введите API-ключ OpenRouter');
       return;
     }
 
-    const todayReports = reports.filter(r => r.date.startsWith(today));
-    if (todayReports.length === 0) {
-      setAiSummary('Сегодня ещё нет отчётов.');
-      setAiError('');
+    const { start, end } = getDateRange(aiPeriod);
+    const filteredReports = reports.filter(r => {
+      const d = new Date(r.date);
+      return d >= start && d <= end;
+    });
+
+    if (filteredReports.length === 0) {
+      setAiError('За выбранный период нет отчётов.');
+      setAiSummary('');
       return;
     }
 
-    const reportText = todayReports.map(r => {
+    const title = getReportTitle(aiPeriod, start, end);
+    setAiReportTitle(title);
+
+    // Строим текст всех отчётов
+    const reportText = filteredReports.map(r => {
       const emp = employees.find(e => e.id === r.employeeId);
-      return `${emp ? emp.name : 'Сотрудник'}: ${r.hours}ч — ${r.comment}`;
+      return `${emp ? emp.name : 'Сотрудник'}: ${r.hours}ч — ${r.comment} (дата: ${new Date(r.date).toLocaleDateString('ru')})`;
     }).join('\n');
 
-    const prompt = `Ты — руководитель отдела. Проанализируй следующие ежедневные отчёты сотрудников за сегодня и составь краткую общую сводку. Выдели ключевые задачи, прогресс, возможные проблемы. Вот отчёты:\n${reportText}\n\nДай ответ на русском языке.`;
+    // Улучшенный промпт – группировка по блокам, измеримые результаты
+    const prompt = `Ты — руководитель отдела. Проанализируй ежедневные отчёты сотрудников за период и составь аналитическую сводку.
+${title}
+
+Данные отчётов:
+${reportText}
+
+Требования к сводке:
+1. Сгруппируй задачи по логическим направлениям (например: "Документооборот и СЭД", "Проекты и цифровая трансформация", "Техническая поддержка", "Информационная безопасность", "Прочее").
+2. В каждом блоке опиши конкретные измеримые результаты: количество выполненных задач, объём в часах, сроки, достижения, проблемы.
+3. Не переписывай отчёты, а обобщай и анализируй.
+4. Выдели общий объём работы и ключевые результаты за период.
+5. Ответ — на русском языке, без повторения инструкций.`;
 
     setIsAiLoading(true);
     setAiError('');
@@ -75,7 +144,8 @@ export default function DailyReport({ employees, reports, onSubmit }) {
         body: JSON.stringify({
           model: 'google/gemini-2.0-flash-001',
           messages: [{ role: 'user', content: prompt }],
-          temperature: 0.5
+          temperature: 0.4,
+          max_tokens: 1500
         })
       });
 
@@ -93,14 +163,12 @@ export default function DailyReport({ employees, reports, onSubmit }) {
     } finally {
       setIsAiLoading(false);
     }
-  }, [apiKeyInput, reports, today, employees]);
+  }, [apiKeyInput, aiPeriod, reports, employees]);
 
-  // Открыть модальное окно (сбрасываем предыдущие результаты)
   const openAiModal = () => {
     setShowAiModal(true);
     setAiSummary('');
     setAiError('');
-    // не сбрасываем ключ, чтобы можно было скопировать
   };
 
   return (
@@ -144,18 +212,18 @@ export default function DailyReport({ employees, reports, onSubmit }) {
         )}
       </form>
 
-      {/* Кнопка AI-сводки */}
-      <div className="mt-4">
+      {/* Кнопка AI-сводки с выбором периода */}
+      <div className="mt-4 flex items-center gap-3 flex-wrap">
         <button
           onClick={openAiModal}
           className="text-sm bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700"
         >
-          🧠 AI-сводка за сегодня
+          🧠 AI-сводка
         </button>
-        <span className="text-xs text-gray-400 ml-2">требуется ключ OpenRouter</span>
+        <span className="text-xs text-gray-400">требуется ключ OpenRouter</span>
       </div>
 
-      {/* Диаграмма загрузки */}
+      {/* Диаграмма загрузки за сегодня */}
       <div className="mt-6">
         <h3 className="text-sm font-semibold text-gray-600 mb-2">
           Загрузка за сегодня (часы)
@@ -179,47 +247,64 @@ export default function DailyReport({ employees, reports, onSubmit }) {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl p-6 max-w-3xl w-full max-h-[90vh] overflow-auto shadow-lg">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold">AI-сводка за сегодня</h3>
+              <h3 className="text-lg font-semibold">AI-сводка</h3>
               <button onClick={() => setShowAiModal(false)} className="text-gray-400 hover:text-gray-600">✕</button>
             </div>
 
-            {/* Поле ввода ключа */}
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                API-ключ OpenRouter
-              </label>
-              <div className="flex gap-2">
-                <input
-                  type="password"
-                  value={apiKeyInput}
-                  onChange={e => setApiKeyInput(e.target.value)}
-                  placeholder="sk-or-..."
-                  className="flex-1 border rounded p-2 text-sm"
-                />
-                <button
-                  onClick={generateAiSummary}
-                  disabled={isAiLoading}
-                  className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 disabled:opacity-50 text-sm"
+            {/* Выбор периода и ключ */}
+            <div className="mb-4 space-y-3">
+              <div className="flex gap-2 items-center">
+                <label className="text-sm font-medium">Период:</label>
+                <select
+                  value={aiPeriod}
+                  onChange={e => setAiPeriod(e.target.value)}
+                  className="border rounded p-2 text-sm"
                 >
-                  {isAiLoading ? 'Генерация...' : 'Сгенерировать'}
-                </button>
+                  <option value="day">1 день</option>
+                  <option value="week">1 неделя</option>
+                  <option value="month">1 месяц</option>
+                  <option value="year">1 год</option>
+                </select>
               </div>
-              <p className="text-xs text-gray-400 mt-1">
-                Ключ не сохраняется. Получить: openrouter.ai/keys
-              </p>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  API-ключ OpenRouter
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="password"
+                    value={apiKeyInput}
+                    onChange={e => setApiKeyInput(e.target.value)}
+                    placeholder="sk-or-..."
+                    className="flex-1 border rounded p-2 text-sm"
+                  />
+                  <button
+                    onClick={generateAiSummary}
+                    disabled={isAiLoading}
+                    className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 disabled:opacity-50 text-sm"
+                  >
+                    {isAiLoading ? 'Генерация...' : 'Сгенерировать'}
+                  </button>
+                </div>
+                <p className="text-xs text-gray-400 mt-1">
+                  Ключ не сохраняется. Получить: openrouter.ai/keys
+                </p>
+              </div>
             </div>
 
-            {/* Ошибка */}
             {aiError && (
               <div className="mb-4 p-3 bg-red-50 text-red-700 rounded text-sm">
                 {aiError}
               </div>
             )}
 
-            {/* Результат */}
-            {aiSummary && (
-              <div className="prose max-w-none text-sm whitespace-pre-wrap bg-gray-50 p-4 rounded">
-                {aiSummary}
+            {aiReportTitle && aiSummary && (
+              <div>
+                <h4 className="font-semibold text-md mb-2">{aiReportTitle}</h4>
+                <div className="prose max-w-none text-sm whitespace-pre-wrap bg-gray-50 p-4 rounded">
+                  {aiSummary}
+                </div>
               </div>
             )}
           </div>
