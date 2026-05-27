@@ -1,5 +1,9 @@
 name: Deploy to GitHub Pages
 
+permissions:
+  contents: write
+  pages: write
+
 on:
   push:
     branches: ['main']
@@ -20,7 +24,7 @@ jobs:
         run: npm install
 
       - name: Build project
-        run: npm run build
+        run: npx vite build
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
