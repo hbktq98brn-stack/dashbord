@@ -109,9 +109,11 @@ const projectsData = [
   }
 ];
 
+// Статусы КТ и регионов
 const ktStatuses = ['Не начато', 'В работе', 'Под риском', 'Просрочено', 'Выполнено'];
 const regionStatuses = ['Не начато', 'Внедряется', 'Риски', 'Внедрено'];
 
+// Пересчёт controlPoints на основе статусов roadmap
 const recalcControlPoints = (roadmap) => {
   const total = roadmap.length;
   const done = roadmap.filter(r => r.status === 'Выполнено').length;
@@ -120,6 +122,7 @@ const recalcControlPoints = (roadmap) => {
   return { total, done, risk, overdue };
 };
 
+// Определение статуса проекта
 const getProjectStatus = (project) => {
   if (project.type === 'digital_id') {
     const current = 100000;
@@ -142,8 +145,6 @@ export default function Projects() {
   const [showReportModal, setShowReportModal] = useState(false);
   const [selectedProjectsForReport, setSelectedProjectsForReport] = useState([]);
   const [reportText, setReportText] = useState('');
-  const [pendingRequests, setPendingRequests] = useState([]);
-  const [showApprovalModal, setShowApprovalModal] = useState(false);
 
   const handleSetResponsible = (projectId, employeeId) => {
     setProjects(prev => prev.map(p => p.id === projectId ? { ...p, responsible: employeeId || null } : p));
@@ -153,79 +154,46 @@ export default function Projects() {
     setSelectedProject(project);
   };
 
-  // Запрос на изменение статуса КТ (только создаёт запрос)
-  const handleKtStatusChangeRequest = (projectId, ktNo, newStatus, oldStatus) => {
-    const project = projects.find(p => p.id === projectId);
-    setPendingRequests(prev => [...prev, {
-      id: Date.now(),
-      projectId,
-      projectTitle: project.title,
-      type: 'kt',
-      ktNo,
-      oldStatus,
-      newStatus,
-      requestedAt: new Date().toLocaleString('ru')
-    }]);
-  };
-
-  // Запрос на изменение статуса региона
-  const handleRegionStatusChangeRequest = (projectId, regionIndex, newStatus, oldStatus) => {
-    const project = projects.find(p => p.id === projectId);
-    const regionName = project.digitalIdData.regions[regionIndex].name;
-    setPendingRequests(prev => [...prev, {
-      id: Date.now(),
-      projectId,
-      projectTitle: project.title,
-      type: 'region',
-      regionIndex,
-      regionName,
-      oldStatus,
-      newStatus,
-      requestedAt: new Date().toLocaleString('ru')
-    }]);
-  };
-
-  // Одобрение запроса (только руководителем)
-  const approveRequest = (requestId) => {
-    const request = pendingRequests.find(r => r.id === requestId);
-    if (!request) return;
+  const handleKtStatusChange = (projectId, ktNo, newStatus) => {
     setProjects(prev => prev.map(p => {
-      if (p.id !== request.projectId) return p;
-      if (request.type === 'kt') {
-        const updatedRoadmap = p.roadmap.map(kt =>
-          kt.no === request.ktNo ? { ...kt, status: request.newStatus } : kt
-        );
-        return { ...p, roadmap: updatedRoadmap, controlPoints: recalcControlPoints(updatedRoadmap) };
-      } else if (request.type === 'region' && p.type === 'digital_id') {
-        const updatedRegions = p.digitalIdData.regions.map((reg, idx) =>
-          idx === request.regionIndex ? { ...reg, status: request.newStatus } : reg
-        );
-        return { ...p, digitalIdData: { ...p.digitalIdData, regions: updatedRegions } };
-      }
-      return p;
+      if (p.id !== projectId) return p;
+      const updatedRoadmap = p.roadmap.map(kt =>
+        kt.no === ktNo ? { ...kt, status: newStatus } : kt
+      );
+      const newControlPoints = recalcControlPoints(updatedRoadmap);
+      return { ...p, roadmap: updatedRoadmap, controlPoints: newControlPoints };
     }));
-    setPendingRequests(prev => prev.filter(r => r.id !== requestId));
-    // Также обновляем выбранный проект, если открыт
     setSelectedProject(prev => {
-      if (!prev || prev.id !== request.projectId) return prev;
-      if (request.type === 'kt') {
-        const updatedRoadmap = prev.roadmap.map(kt =>
-          kt.no === request.ktNo ? { ...kt, status: request.newStatus } : kt
-        );
-        return { ...prev, roadmap: updatedRoadmap, controlPoints: recalcControlPoints(updatedRoadmap) };
-      } else if (request.type === 'region' && prev.type === 'digital_id') {
-        const updatedRegions = prev.digitalIdData.regions.map((reg, idx) =>
-          idx === request.regionIndex ? { ...reg, status: request.newStatus } : reg
-        );
-        return { ...prev, digitalIdData: { ...prev.digitalIdData, regions: updatedRegions } };
-      }
-      return prev;
+      if (!prev || prev.id !== projectId) return prev;
+      const updatedRoadmap = prev.roadmap.map(kt =>
+        kt.no === ktNo ? { ...kt, status: newStatus } : kt
+      );
+      const newControlPoints = recalcControlPoints(updatedRoadmap);
+      return { ...prev, roadmap: updatedRoadmap, controlPoints: newControlPoints };
     });
   };
 
-  // Отклонение запроса
-  const rejectRequest = (requestId) => {
-    setPendingRequests(prev => prev.filter(r => r.id !== requestId));
+  const handleRegionStatusChange = (projectId, regionIndex, newStatus) => {
+    setProjects(prev => prev.map(p => {
+      if (p.id !== projectId || p.type !== 'digital_id') return p;
+      const updatedRegions = p.digitalIdData.regions.map((reg, idx) =>
+        idx === regionIndex ? { ...reg, status: newStatus } : reg
+      );
+      return {
+        ...p,
+        digitalIdData: { ...p.digitalIdData, regions: updatedRegions }
+      };
+    }));
+    setSelectedProject(prev => {
+      if (!prev || prev.id !== projectId || prev.type !== 'digital_id') return prev;
+      const updatedRegions = prev.digitalIdData.regions.map((reg, idx) =>
+        idx === regionIndex ? { ...reg, status: newStatus } : reg
+      );
+      return {
+        ...prev,
+        digitalIdData: { ...prev.digitalIdData, regions: updatedRegions }
+      };
+    });
   };
 
   const generateReport = () => {
@@ -265,23 +233,9 @@ export default function Projects() {
     red: 'status-red bg-red-50 animate-pulse'
   };
 
-  // Проверка, есть ли ожидающий запрос для данной КТ или региона
-  const hasPendingKt = (projectId, ktNo) =>
-    pendingRequests.some(r => r.projectId === projectId && r.type === 'kt' && r.ktNo === ktNo);
-  const hasPendingRegion = (projectId, regionIndex) =>
-    pendingRequests.some(r => r.projectId === projectId && r.type === 'region' && r.regionIndex === regionIndex);
-
   return (
     <div>
-      <div className="mb-4 flex justify-end gap-2">
-        {pendingRequests.length > 0 && (
-          <button
-            onClick={() => setShowApprovalModal(true)}
-            className="bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-600 text-sm"
-          >
-            Ожидают подтверждения ({pendingRequests.length})
-          </button>
-        )}
+      <div className="mb-4 flex justify-end">
         <button
           onClick={() => setShowReportModal(true)}
           className="bg-brand-500 text-white px-4 py-2 rounded-lg hover:bg-brand-600 text-sm"
@@ -302,12 +256,21 @@ export default function Projects() {
               onClick={() => handleProjectClick(project)}
               className={`metric-card p-4 rounded-xl cursor-pointer hover:shadow-md transition-shadow ${statusClasses[status]} relative h-48 flex flex-col`}
             >
+              {/* Индикатор контрольных точек — яркие бейджи */}
               {project.type !== 'digital_id' && (
-                <div className="absolute top-2 right-2 flex gap-1 text-xs">
-                  <span title="Всего" className="text-gray-500">Σ{total}</span>
-                  <span title="Выполнено" className="text-green-600">✓{done}</span>
-                  <span title="Под риском" className="text-yellow-600">⚠{risk}</span>
-                  <span title="Просрочено" className="text-red-600">✗{overdue}</span>
+                <div className="absolute top-2 right-2 flex flex-wrap gap-1 z-10">
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
+                    Σ {total}
+                  </span>
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    ✓ {done}
+                  </span>
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                    ⚠ {risk}
+                  </span>
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                    ✗ {overdue}
+                  </span>
                 </div>
               )}
 
@@ -371,20 +334,13 @@ export default function Projects() {
                     <td className="p-2">
                       <select
                         value={point.status}
-                        onChange={e => {
-                          if (e.target.value !== point.status) {
-                            handleKtStatusChangeRequest(selectedProject.id, point.no, e.target.value, point.status);
-                          }
-                        }}
+                        onChange={e => handleKtStatusChange(selectedProject.id, point.no, e.target.value)}
                         className="text-xs border rounded p-1"
                       >
                         {ktStatuses.map(s => (
                           <option key={s} value={s}>{s}</option>
                         ))}
                       </select>
-                      {hasPendingKt(selectedProject.id, point.no) && (
-                        <span className="ml-2 text-xs text-yellow-600">⏳ Ожидает</span>
-                      )}
                     </td>
                     <td className="p-2">{point.comment}</td>
                   </tr>
@@ -445,20 +401,13 @@ export default function Projects() {
                           <td className="p-2">
                             <select
                               value={region.status}
-                              onChange={e => {
-                                if (e.target.value !== region.status) {
-                                  handleRegionStatusChangeRequest(selectedProject.id, idx, e.target.value, region.status);
-                                }
-                              }}
+                              onChange={e => handleRegionStatusChange(selectedProject.id, idx, e.target.value)}
                               className="text-xs border rounded p-1"
                             >
                               {regionStatuses.map(s => (
                                 <option key={s} value={s}>{s}</option>
                               ))}
                             </select>
-                            {hasPendingRegion(selectedProject.id, idx) && (
-                              <span className="ml-2 text-xs text-yellow-600">⏳ Ожидает</span>
-                            )}
                           </td>
                         </tr>
                       ))}
@@ -491,7 +440,6 @@ export default function Projects() {
         </div>
       )}
 
-      {/* Модальное окно отчёта по проектам */}
       {showReportModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl p-6 max-w-2xl w-full max-h-[80vh] overflow-auto shadow-lg">
@@ -530,48 +478,6 @@ export default function Projects() {
               <div className="mt-4 whitespace-pre-wrap bg-gray-50 p-4 rounded text-sm">
                 {reportText}
               </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Модальное окно для утверждения запросов */}
-      {showApprovalModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 max-w-2xl w-full max-h-[80vh] overflow-auto shadow-lg">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold">Ожидают подтверждения</h3>
-              <button onClick={() => setShowApprovalModal(false)} className="text-gray-400 hover:text-gray-600">✕</button>
-            </div>
-            {pendingRequests.length === 0 ? (
-              <p className="text-sm text-gray-500">Нет ожидающих запросов</p>
-            ) : (
-              <ul className="space-y-2">
-                {pendingRequests.map(req => (
-                  <li key={req.id} className="border p-3 rounded text-sm">
-                    <div className="font-medium">{req.projectTitle}</div>
-                    <div className="text-gray-600">
-                      {req.type === 'kt' ? `КТ №${req.ktNo}` : `Регион: ${req.regionName}`}:
-                      <span className="text-red-500"> {req.oldStatus}</span> → <span className="text-green-600">{req.newStatus}</span>
-                    </div>
-                    <div className="text-xs text-gray-400 mt-1">Запрошено: {req.requestedAt}</div>
-                    <div className="flex gap-2 mt-2">
-                      <button
-                        onClick={() => approveRequest(req.id)}
-                        className="bg-green-500 text-white px-3 py-1 rounded text-xs hover:bg-green-600"
-                      >
-                        Одобрить
-                      </button>
-                      <button
-                        onClick={() => rejectRequest(req.id)}
-                        className="bg-red-500 text-white px-3 py-1 rounded text-xs hover:bg-red-600"
-                      >
-                        Отклонить
-                      </button>
-                    </div>
-                  </li>
-                ))}
-              </ul>
             )}
           </div>
         </div>
