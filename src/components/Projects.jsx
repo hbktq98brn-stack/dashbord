@@ -146,6 +146,9 @@ export default function Projects() {
   const [selectedProjectsForReport, setSelectedProjectsForReport] = useState([]);
   const [reportText, setReportText] = useState('');
 
+  // Состояния для подтверждения изменения статуса КТ
+  const [confirmDialog, setConfirmDialog] = useState(null); // { projectId, ktNo, newStatus }
+
   const handleSetResponsible = (projectId, employeeId) => {
     setProjects(prev => prev.map(p => p.id === projectId ? { ...p, responsible: employeeId || null } : p));
   };
@@ -154,7 +157,14 @@ export default function Projects() {
     setSelectedProject(project);
   };
 
-  const handleKtStatusChange = (projectId, ktNo, newStatus) => {
+  // Вызывается при выборе нового статуса из выпадающего списка
+  const handleKtStatusChangeRequest = (projectId, ktNo, newStatus) => {
+    setConfirmDialog({ projectId, ktNo, newStatus });
+  };
+
+  const confirmKtStatusChange = () => {
+    if (!confirmDialog) return;
+    const { projectId, ktNo, newStatus } = confirmDialog;
     setProjects(prev => prev.map(p => {
       if (p.id !== projectId) return p;
       const updatedRoadmap = p.roadmap.map(kt =>
@@ -171,6 +181,11 @@ export default function Projects() {
       const newControlPoints = recalcControlPoints(updatedRoadmap);
       return { ...prev, roadmap: updatedRoadmap, controlPoints: newControlPoints };
     });
+    setConfirmDialog(null);
+  };
+
+  const cancelKtStatusChange = () => {
+    setConfirmDialog(null);
   };
 
   const handleRegionStatusChange = (projectId, regionIndex, newStatus) => {
@@ -256,7 +271,7 @@ export default function Projects() {
               onClick={() => handleProjectClick(project)}
               className={`metric-card p-4 rounded-xl cursor-pointer hover:shadow-md transition-shadow ${statusClasses[status]} relative h-48 flex flex-col`}
             >
-              {/* Индикатор контрольных точек — яркие бейджи */}
+              {/* Индикатор КТ – красивые бейджи, не перекрывают заголовок */}
               {project.type !== 'digital_id' && (
                 <div className="absolute top-2 right-2 flex flex-wrap gap-1 z-10">
                   <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
@@ -274,7 +289,8 @@ export default function Projects() {
                 </div>
               )}
 
-              <h3 className="text-base font-semibold text-gray-800 mb-2 pr-16">{project.title}</h3>
+              {/* Заголовок с отступом, чтобы не наезжали бейджи */}
+              <h3 className="text-base font-semibold text-gray-800 mb-2 mt-4 pr-20">{project.title}</h3>
 
               {project.type === 'digital_id' && (
                 <div className="text-xs text-gray-500 mb-2 flex-1">
@@ -307,6 +323,32 @@ export default function Projects() {
         })}
       </div>
 
+      {/* Диалог подтверждения изменения статуса КТ */}
+      {confirmDialog && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 max-w-sm w-full shadow-lg">
+            <h3 className="text-lg font-semibold mb-2">Подтверждение изменения статуса</h3>
+            <p className="text-sm text-gray-600 mb-4">
+              Вы действительно хотите изменить статус контрольной точки №{confirmDialog.ktNo} на "{confirmDialog.newStatus}"?
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={cancelKtStatusChange}
+                className="px-4 py-2 text-sm border rounded hover:bg-gray-100"
+              >
+                Отмена
+              </button>
+              <button
+                onClick={confirmKtStatusChange}
+                className="px-4 py-2 text-sm bg-brand-500 text-white rounded hover:bg-brand-600"
+              >
+                Подтвердить
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Модальное окно дорожной карты (кроме digital_id) */}
       {selectedProject && selectedProject.type !== 'digital_id' && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -334,7 +376,7 @@ export default function Projects() {
                     <td className="p-2">
                       <select
                         value={point.status}
-                        onChange={e => handleKtStatusChange(selectedProject.id, point.no, e.target.value)}
+                        onChange={e => handleKtStatusChangeRequest(selectedProject.id, point.no, e.target.value)}
                         className="text-xs border rounded p-1"
                       >
                         {ktStatuses.map(s => (
