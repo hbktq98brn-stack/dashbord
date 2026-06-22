@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
+import { PieChart, Pie, Cell, Tooltip } from 'recharts';
 import { sedAll, sedNew, sedUnread, sedExpiring, sedOverdue } from '../../data/sedDocuments';
 
 const categories = [
-  { key: 'all', label: 'ВСЕ', count: sedAll.length, url: 'http://192.168.10.133/delou/Pages/Cabinet/Folder.aspx?folder_id=1&folders=1|2&isn_request=6557670&card_id=0.3UQL9.&cabinet_id=6998476' },
-  { key: 'new', label: 'НОВЫЕ', count: sedNew.length, url: 'http://192.168.10.133/delou/Pages/Cabinet/Folder.aspx?folder_id=1&folders=1|2&isn_request=6557671&card_id=0.3UQL9.&cabinet_id=6998476' },
-  { key: 'unread', label: 'НЕ РАССМОТРЕНО', count: sedUnread.length, url: 'http://192.168.10.133/delou/Pages/Cabinet/Folder.aspx?folder_id=1&folders=1|2&isn_request=6557672&card_id=0.3UQL9.&cabinet_id=6998476' },
-  { key: 'expiring', label: 'СРОК ИСТЕКАЕТ', count: sedExpiring.length, url: 'http://192.168.10.133/delou/Pages/Cabinet/Folder.aspx?folder_id=1&folders=1|2&isn_request=6557673&card_id=0.3UQL9.&cabinet_id=6998476' },
-  { key: 'overdue', label: 'ПРОСРОЧЕНО', count: sedOverdue.length, url: 'http://192.168.10.133/delou/Pages/Cabinet/Folder.aspx?folder_id=1&folders=1|2&isn_request=6557674&card_id=0.3UQL9.&cabinet_id=6998476' },
+  { key: 'all', label: 'ВСЕ', count: sedAll.length, url: 'http://192.168.10.133/delou/Pages/Cabinet/Folder.aspx?folder_id=1&folders=1|2&isn_request=6557670&card_id=0.3UQL9.&cabinet_id=6998476', color: '#3b82f6' },
+  { key: 'new', label: 'НОВЫЕ', count: sedNew.length, url: 'http://192.168.10.133/delou/Pages/Cabinet/Folder.aspx?folder_id=1&folders=1|2&isn_request=6557671&card_id=0.3UQL9.&cabinet_id=6998476', color: '#10b981' },
+  { key: 'unread', label: 'НЕ РАССМОТРЕНО', count: sedUnread.length, url: 'http://192.168.10.133/delou/Pages/Cabinet/Folder.aspx?folder_id=1&folders=1|2&isn_request=6557672&card_id=0.3UQL9.&cabinet_id=6998476', color: '#f59e0b' },
+  { key: 'expiring', label: 'СРОК ИСТЕКАЕТ', count: sedExpiring.length, url: 'http://192.168.10.133/delou/Pages/Cabinet/Folder.aspx?folder_id=1&folders=1|2&isn_request=6557673&card_id=0.3UQL9.&cabinet_id=6998476', color: '#8b5cf6' },
+  { key: 'overdue', label: 'ПРОСРОЧЕНО', count: sedOverdue.length, url: 'http://192.168.10.133/delou/Pages/Cabinet/Folder.aspx?folder_id=1&folders=1|2&isn_request=6557674&card_id=0.3UQL9.&cabinet_id=6998476', color: '#ef4444' },
 ];
 
 const getData = (key) => {
@@ -29,36 +30,65 @@ export default function SedControl() {
     setExpandedCat(prev => prev === key ? null : key);
   };
 
+  // Данные для круговой диаграммы (без категории ВСЕ, чтобы не дублировать сумму)
+  const pieData = categories
+    .filter(c => c.key !== 'all')
+    .map(c => ({ name: c.label, value: c.count, color: c.color }));
+
   return (
     <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
       <h2 className="text-lg font-semibold text-gray-700 mb-4">Контроль СЭД</h2>
-      <div className="flex flex-wrap gap-2 mb-6">
-        {categories.map(cat => (
-          <div key={cat.key} className="flex flex-col items-start">
-            <a
-              href={cat.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-                expandedCat === cat.key
-                  ? 'bg-brand-500 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
+
+      {/* Диаграмма и кнопки в одном ряду на больших экранах */}
+      <div className="flex flex-col lg:flex-row lg:items-start gap-6">
+        {/* Круговая диаграмма */}
+        <div className="flex-shrink-0 flex justify-center">
+          <PieChart width={180} height={180}>
+            <Pie
+              data={pieData}
+              innerRadius={55}
+              outerRadius={85}
+              dataKey="value"
+              paddingAngle={2}
             >
-              {cat.label} ({cat.count})
-            </a>
-            <button
-              onClick={() => toggleCategory(cat.key)}
-              className="text-xs text-brand-500 mt-1 hover:underline"
-            >
-              {expandedCat === cat.key ? 'Скрыть документы' : 'Показать документы'}
-            </button>
-          </div>
-        ))}
+              {pieData.map((entry, idx) => (
+                <Cell key={idx} fill={entry.color} />
+              ))}
+            </Pie>
+            <Tooltip />
+          </PieChart>
+        </div>
+
+        {/* Кнопки категорий */}
+        <div className="flex-1 flex flex-wrap gap-2 content-start">
+          {categories.map(cat => (
+            <div key={cat.key} className="flex flex-col items-start">
+              <a
+                href={cat.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+                  expandedCat === cat.key
+                    ? 'bg-brand-500 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                {cat.label} ({cat.count})
+              </a>
+              <button
+                onClick={() => toggleCategory(cat.key)}
+                className="text-xs text-brand-500 mt-1 hover:underline"
+              >
+                {expandedCat === cat.key ? 'Скрыть документы' : 'Показать документы'}
+              </button>
+            </div>
+          ))}
+        </div>
       </div>
 
+      {/* Таблица документов (раскрывается) */}
       {expandedCat && (
-        <div className="overflow-x-auto mt-4">
+        <div className="overflow-x-auto mt-6">
           <table className="w-full text-xs border-collapse">
             <thead>
               <tr className="bg-gray-50">
