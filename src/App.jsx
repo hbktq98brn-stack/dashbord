@@ -47,7 +47,7 @@ function AppContent() {
       <header className="flex items-center justify-between mb-2">
         <div>
           <h1 className="text-3xl font-light text-gray-800">Управленческий дашборд</h1>
-          <p className="text-gray-500">Департамент интеграции и контроля</p>
+          <p className="text-gray-500">Департамент управления делами и цифровой трансформации</p>
         </div>
         <div className="flex items-center gap-3">
           {user ? (
