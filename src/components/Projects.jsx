@@ -52,7 +52,7 @@ const projectsData = [
   {
     id: 5,
     title: 'Цифровой ИД',
-    controlPoints: { total: 0, done: 0, risk: 0, overdue: 0 }, // не используется, у него сводка
+    controlPoints: { total: 0, done: 0, risk: 0, overdue: 0 },
     type: 'digital_id',
     digitalIdData: {
       organizations: {
@@ -121,22 +121,19 @@ const ControlPointsIndicator = ({ total, done, risk, overdue }) => (
 
 export default function Projects() {
   const [projects, setProjects] = useState(projectsData.map(p => ({ ...p, responsible: null })));
-  const [selectedProject, setSelectedProject] = useState(null); // для модального окна ДК/сводки
+  const [selectedProject, setSelectedProject] = useState(null);
   const [showReportModal, setShowReportModal] = useState(false);
   const [selectedProjectsForReport, setSelectedProjectsForReport] = useState([]);
   const [reportText, setReportText] = useState('');
 
-  // Установка ответственного для проекта
   const handleSetResponsible = (projectId, employeeId) => {
     setProjects(prev => prev.map(p => p.id === projectId ? { ...p, responsible: employeeId || null } : p));
   };
 
-  // Открыть модалку с дорожной картой или сводкой ИД
   const handleProjectClick = (project) => {
     setSelectedProject(project);
   };
 
-  // Формирование справки по выбранным проектам
   const generateReport = () => {
     const selected = projects.filter(p => selectedProjectsForReport.includes(p.id));
     if (selected.length === 0) {
@@ -147,9 +144,15 @@ export default function Projects() {
     selected.forEach(p => {
       text += `**${p.title}**\n`;
       if (p.type === 'digital_id') {
-        // для Цифрового ИД особая сводка
+        // Исправлено: корректное суммирование connected
+        const orgs = p.digitalIdData.organizations;
+        const totalConnected = orgs.theatres.connected + orgs.museums.connected +
+          orgs.cinema.connected + orgs.exhibitions.connected +
+          orgs.galleries.connected + orgs.libraries.connected +
+          orgs.circuses.connected;
         text += `Контрольные точки: не применимо\n`;
-        text += `Организации подключено: ${p.digitalIdData.organizations.theatres.connected + p.digitalIdData.organizations.museums.connected + ...} (всего)`;
+        text += `Организации подключено: ${totalConnected} (всего)\n`;
+        text += `Пользователей МАХ: ${p.digitalIdData.maxUsersChart[1].value / 1000} тыс.\n`;
       } else {
         const { total, done, risk, overdue } = p.controlPoints;
         text += `Контрольных точек: всего ${total}, выполнено ${done}, под риском ${risk}, просрочено ${overdue}\n`;
@@ -165,7 +168,6 @@ export default function Projects() {
 
   return (
     <div>
-      {/* Кнопка формирования отчёта */}
       <div className="mb-4 flex justify-end">
         <button
           onClick={() => setShowReportModal(true)}
@@ -175,7 +177,6 @@ export default function Projects() {
         </button>
       </div>
 
-      {/* Сетка проектов */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {projects.map(project => (
           <div
@@ -183,7 +184,6 @@ export default function Projects() {
             className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 relative cursor-pointer hover:shadow-md transition-shadow"
             onClick={() => handleProjectClick(project)}
           >
-            {/* Индикатор контрольных точек (кроме Цифрового ИД, где он не применим) */}
             {project.type !== 'digital_id' && (
               <ControlPointsIndicator
                 total={project.controlPoints.total}
@@ -194,7 +194,6 @@ export default function Projects() {
             )}
             <h3 className="text-lg font-semibold text-gray-800 mb-2 mt-6">{project.title}</h3>
 
-            {/* Выпадающий список ответственного */}
             <div className="mt-2" onClick={e => e.stopPropagation()}>
               <label className="text-xs text-gray-500">Ответственный:</label>
               <select
@@ -208,7 +207,6 @@ export default function Projects() {
                 ))}
               </select>
             </div>
-            {/* Для Цифрового ИД можно вывести краткую сводку */}
             {project.type === 'digital_id' && (
               <div className="text-xs text-gray-500 mt-2">
                 Организаций подключено: {Object.values(project.digitalIdData.organizations).reduce((sum, o) => sum + o.connected, 0)}
@@ -220,7 +218,6 @@ export default function Projects() {
         ))}
       </div>
 
-      {/* Модальное окно дорожной карты (для всех кроме digital_id) */}
       {selectedProject && selectedProject.type !== 'digital_id' && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl p-6 max-w-3xl w-full max-h-[80vh] overflow-auto shadow-lg">
@@ -254,7 +251,6 @@ export default function Projects() {
         </div>
       )}
 
-      {/* Модальное окно сводки для Цифрового ИД */}
       {selectedProject && selectedProject.type === 'digital_id' && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl p-6 max-w-5xl w-full max-h-[90vh] overflow-auto shadow-lg">
@@ -264,7 +260,6 @@ export default function Projects() {
             </div>
             {selectedProject.digitalIdData && (
               <div className="space-y-6">
-                {/* Подключённые организации */}
                 <div>
                   <h4 className="font-medium mb-2">Подключённые организации культуры</h4>
                   <table className="w-full text-sm">
@@ -289,7 +284,6 @@ export default function Projects() {
                   </table>
                 </div>
 
-                {/* Регионы */}
                 <div>
                   <h4 className="font-medium mb-2">Внедрение по регионам</h4>
                   <table className="w-full text-sm">
@@ -310,7 +304,6 @@ export default function Projects() {
                   </table>
                 </div>
 
-                {/* График МАХ */}
                 <div>
                   <h4 className="font-medium mb-2">Активность в МАХ</h4>
                   <div className="flex gap-8 text-sm">
@@ -319,11 +312,9 @@ export default function Projects() {
                       <p>Цель к 01.10.2026: 500 тыс.</p>
                       <p>Цель к 01.01.2027: 1 млн</p>
                     </div>
-                    {/* Здесь можно вставить график (recharts), но пока просто текст */}
                   </div>
                 </div>
 
-                {/* Активные пользователи каналов */}
                 <div>
                   <h4 className="font-medium mb-2">Активные пользователи каналов Минкультуры</h4>
                   <ul className="space-y-1 text-sm">
@@ -338,7 +329,6 @@ export default function Projects() {
         </div>
       )}
 
-      {/* Модальное окно отчёта */}
       {showReportModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl p-6 max-w-2xl w-full max-h-[80vh] overflow-auto shadow-lg">
