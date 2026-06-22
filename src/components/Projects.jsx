@@ -52,18 +52,18 @@ const projectsData = [
   {
     id: 5,
     title: 'Цифровой ИД',
-    controlPoints: { total: 0, done: 0, risk: 0, overdue: 0 }, // не используется, но status определим по прогрессу
+    controlPoints: { total: 0, done: 0, risk: 0, overdue: 0 },
     type: 'digital_id',
     digitalIdData: {
-      organizations: {
-        theatres: { connected: 120, scanned: 4500, passages: 3200 },
-        museums: { connected: 85, scanned: 2800, passages: 1900 },
-        cinema: { connected: 40, scanned: 600, passages: 500 },
-        exhibitions: { connected: 30, scanned: 300, passages: 200 },
-        galleries: { connected: 25, scanned: 150, passages: 100 },
-        libraries: { connected: 200, scanned: 1000, passages: 800 },
-        circuses: { connected: 15, scanned: 80, passages: 60 }
-      },
+      organizations: [
+        { type: 'Театры', connected: 120, scanned: 4500, passages: 3200 },
+        { type: 'Музеи', connected: 85, scanned: 2800, passages: 1900 },
+        { type: 'Кинотеатры', connected: 40, scanned: 600, passages: 500 },
+        { type: 'Выставки', connected: 30, scanned: 300, passages: 200 },
+        { type: 'Галереи', connected: 25, scanned: 150, passages: 100 },
+        { type: 'Библиотеки', connected: 200, scanned: 1000, passages: 800 },
+        { type: 'Цирки', connected: 15, scanned: 80, passages: 60 }
+      ],
       regions: [
         { name: 'Москва', status: 'Внедрено' },
         { name: 'Санкт-Петербург', status: 'Внедрено' },
@@ -109,12 +109,24 @@ const projectsData = [
   }
 ];
 
-// Определение статуса проекта по КТ
+// Статусы КТ и регионов
+const ktStatuses = ['Не начато', 'В работе', 'Под риском', 'Просрочено', 'Выполнено'];
+const regionStatuses = ['Не начато', 'Внедряется', 'Риски', 'Внедрено'];
+
+// Пересчёт controlPoints на основе статусов roadmap
+const recalcControlPoints = (roadmap) => {
+  const total = roadmap.length;
+  const done = roadmap.filter(r => r.status === 'Выполнено').length;
+  const risk = roadmap.filter(r => r.status === 'Под риском').length;
+  const overdue = roadmap.filter(r => r.status === 'Просрочено').length;
+  return { total, done, risk, overdue };
+};
+
+// Определение статуса проекта
 const getProjectStatus = (project) => {
   if (project.type === 'digital_id') {
-    // для Цифрового ИД: считаем прогресс по пользователям МАХ
-    const current = 100000; // сейчас 100 тыс
-    const target = 500000;  // цель к октябрю
+    const current = 100000;
+    const target = 500000;
     const progress = current / target;
     if (progress >= 1) return 'green';
     if (progress >= 0.5) return 'yellow';
@@ -124,7 +136,7 @@ const getProjectStatus = (project) => {
   if (overdue > 0) return 'red';
   if (risk > 0) return 'yellow';
   if (done === total) return 'green';
-  return 'yellow'; // если не все выполнены, но рисков и просрочек нет – жёлтый
+  return 'yellow';
 };
 
 export default function Projects() {
@@ -142,6 +154,48 @@ export default function Projects() {
     setSelectedProject(project);
   };
 
+  const handleKtStatusChange = (projectId, ktNo, newStatus) => {
+    setProjects(prev => prev.map(p => {
+      if (p.id !== projectId) return p;
+      const updatedRoadmap = p.roadmap.map(kt =>
+        kt.no === ktNo ? { ...kt, status: newStatus } : kt
+      );
+      const newControlPoints = recalcControlPoints(updatedRoadmap);
+      return { ...p, roadmap: updatedRoadmap, controlPoints: newControlPoints };
+    }));
+    setSelectedProject(prev => {
+      if (!prev || prev.id !== projectId) return prev;
+      const updatedRoadmap = prev.roadmap.map(kt =>
+        kt.no === ktNo ? { ...kt, status: newStatus } : kt
+      );
+      const newControlPoints = recalcControlPoints(updatedRoadmap);
+      return { ...prev, roadmap: updatedRoadmap, controlPoints: newControlPoints };
+    });
+  };
+
+  const handleRegionStatusChange = (projectId, regionIndex, newStatus) => {
+    setProjects(prev => prev.map(p => {
+      if (p.id !== projectId || p.type !== 'digital_id') return p;
+      const updatedRegions = p.digitalIdData.regions.map((reg, idx) =>
+        idx === regionIndex ? { ...reg, status: newStatus } : reg
+      );
+      return {
+        ...p,
+        digitalIdData: { ...p.digitalIdData, regions: updatedRegions }
+      };
+    }));
+    setSelectedProject(prev => {
+      if (!prev || prev.id !== projectId || prev.type !== 'digital_id') return prev;
+      const updatedRegions = prev.digitalIdData.regions.map((reg, idx) =>
+        idx === regionIndex ? { ...reg, status: newStatus } : reg
+      );
+      return {
+        ...prev,
+        digitalIdData: { ...prev.digitalIdData, regions: updatedRegions }
+      };
+    });
+  };
+
   const generateReport = () => {
     const selected = projects.filter(p => selectedProjectsForReport.includes(p.id));
     if (selected.length === 0) {
@@ -152,14 +206,14 @@ export default function Projects() {
     selected.forEach(p => {
       text += `**${p.title}**\n`;
       if (p.type === 'digital_id') {
-        const orgs = p.digitalIdData.organizations;
-        const totalConnected = orgs.theatres.connected + orgs.museums.connected +
-          orgs.cinema.connected + orgs.exhibitions.connected +
-          orgs.galleries.connected + orgs.libraries.connected +
-          orgs.circuses.connected;
+        const totalConnected = p.digitalIdData.organizations.reduce((sum, o) => sum + o.connected, 0);
         text += `Контрольные точки: не применимо\n`;
         text += `Организации подключено: ${totalConnected} (всего)\n`;
         text += `Пользователей МАХ: ${p.digitalIdData.maxUsersChart[1].value / 1000} тыс.\n`;
+        text += `Регионы:\n`;
+        p.digitalIdData.regions.forEach(r => {
+          text += `- ${r.name}: ${r.status}\n`;
+        });
       } else {
         const { total, done, risk, overdue } = p.controlPoints;
         text += `Контрольных точек: всего ${total}, выполнено ${done}, под риском ${risk}, просрочено ${overdue}\n`;
@@ -173,7 +227,6 @@ export default function Projects() {
     setReportText(text);
   };
 
-  // Классы для статуса
   const statusClasses = {
     green: 'status-green bg-green-50',
     yellow: 'status-yellow bg-yellow-50',
@@ -203,7 +256,6 @@ export default function Projects() {
               onClick={() => handleProjectClick(project)}
               className={`metric-card p-4 rounded-xl cursor-pointer hover:shadow-md transition-shadow ${statusClasses[status]} relative`}
             >
-              {/* Индикатор контрольных точек – маленькие иконки в правом верхнем углу */}
               {project.type !== 'digital_id' && (
                 <div className="absolute top-2 right-2 flex gap-1 text-xs">
                   <span title="Всего" className="text-gray-500">Σ{total}</span>
@@ -215,16 +267,14 @@ export default function Projects() {
 
               <h3 className="text-base font-semibold text-gray-800 mb-2 pr-16">{project.title}</h3>
 
-              {/* Для Цифрового ИД покажем краткую сводку */}
               {project.type === 'digital_id' && (
                 <div className="text-xs text-gray-500 mb-2">
-                  Подключено организаций: {Object.values(project.digitalIdData.organizations).reduce((s, o) => s + o.connected, 0)}
+                  Подключено организаций: {project.digitalIdData.organizations.reduce((s, o) => s + o.connected, 0)}
                   <br />
                   Пользователи МАХ: 100 тыс.
                 </div>
               )}
 
-              {/* Выбор ответственного */}
               <div onClick={e => e.stopPropagation()} className="mt-2">
                 <label className="text-xs text-gray-500 block mb-1">Ответственный:</label>
                 <select
@@ -246,7 +296,7 @@ export default function Projects() {
         })}
       </div>
 
-      {/* Модальные окна (дорожная карта, сводка Цифрового ИД, отчёт) – без изменений */}
+      {/* Модальное окно дорожной карты (кроме digital_id) */}
       {selectedProject && selectedProject.type !== 'digital_id' && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl p-6 max-w-3xl w-full max-h-[80vh] overflow-auto shadow-lg">
@@ -270,7 +320,17 @@ export default function Projects() {
                     <td className="p-2">{point.no}</td>
                     <td className="p-2">{point.name}</td>
                     <td className="p-2">{point.planDate}</td>
-                    <td className="p-2">{point.status}</td>
+                    <td className="p-2">
+                      <select
+                        value={point.status}
+                        onChange={e => handleKtStatusChange(selectedProject.id, point.no, e.target.value)}
+                        className="text-xs border rounded p-1"
+                      >
+                        {ktStatuses.map(s => (
+                          <option key={s} value={s}>{s}</option>
+                        ))}
+                      </select>
+                    </td>
                     <td className="p-2">{point.comment}</td>
                   </tr>
                 ))}
@@ -280,6 +340,7 @@ export default function Projects() {
         </div>
       )}
 
+      {/* Модальное окно сводки для Цифрового ИД */}
       {selectedProject && selectedProject.type === 'digital_id' && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl p-6 max-w-5xl w-full max-h-[90vh] overflow-auto shadow-lg">
@@ -301,12 +362,12 @@ export default function Projects() {
                       </tr>
                     </thead>
                     <tbody>
-                      {Object.entries(selectedProject.digitalIdData.organizations).map(([type, data]) => (
-                        <tr key={type} className="border-t">
-                          <td className="p-2 capitalize">{type}</td>
-                          <td className="p-2 text-right">{data.connected}</td>
-                          <td className="p-2 text-right">{data.scanned}</td>
-                          <td className="p-2 text-right">{data.passages}</td>
+                      {selectedProject.digitalIdData.organizations.map((org, idx) => (
+                        <tr key={idx} className="border-t">
+                          <td className="p-2">{org.type}</td>
+                          <td className="p-2 text-right">{org.connected}</td>
+                          <td className="p-2 text-right">{org.scanned}</td>
+                          <td className="p-2 text-right">{org.passages}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -326,7 +387,17 @@ export default function Projects() {
                       {selectedProject.digitalIdData.regions.map((region, idx) => (
                         <tr key={idx} className="border-t">
                           <td className="p-2">{region.name}</td>
-                          <td className="p-2">{region.status}</td>
+                          <td className="p-2">
+                            <select
+                              value={region.status}
+                              onChange={e => handleRegionStatusChange(selectedProject.id, idx, e.target.value)}
+                              className="text-xs border rounded p-1"
+                            >
+                              {regionStatuses.map(s => (
+                                <option key={s} value={s}>{s}</option>
+                              ))}
+                            </select>
+                          </td>
                         </tr>
                       ))}
                     </tbody>
