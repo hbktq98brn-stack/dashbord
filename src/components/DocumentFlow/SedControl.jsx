@@ -1,9 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { PieChart, Pie, Cell, Tooltip } from 'recharts';
 import { sedAll, sedNew, sedUnread, sedExpiring, sedOverdue } from '../../data/sedDocuments';
-import { employees } from '../../data/employees'; // список всех сотрудников
+import { employees } from '../../data/employees';
 
-// Цвета категорий
 const categoryColors = {
   all: '#3b82f6',
   new: '#10b981',
@@ -12,7 +11,6 @@ const categoryColors = {
   overdue: '#ef4444',
 };
 
-// Массив категорий с ключами и ссылками (сами данные теперь будут фильтроваться)
 const categories = [
   { key: 'all', label: 'ВСЕ', url: 'http://192.168.10.133/delou/Pages/Cabinet/Folder.aspx?folder_id=1&folders=1|2&isn_request=6557670&card_id=0.3UQL9.&cabinet_id=6998476' },
   { key: 'new', label: 'НОВЫЕ', url: 'http://192.168.10.133/delou/Pages/Cabinet/Folder.aspx?folder_id=1&folders=1|2&isn_request=6557671&card_id=0.3UQL9.&cabinet_id=6998476' },
@@ -21,7 +19,6 @@ const categories = [
   { key: 'overdue', label: 'ПРОСРОЧЕНО', url: 'http://192.168.10.133/delou/Pages/Cabinet/Folder.aspx?folder_id=1&folders=1|2&isn_request=6557674&card_id=0.3UQL9.&cabinet_id=6998476' },
 ];
 
-// Заглушка для таблицы «Исполнительский контроль»
 const controlReportMock = [
   {
     num: '26-41708',
@@ -41,7 +38,22 @@ const controlReportMock = [
   },
 ];
 
-// Вспомогательная функция получения данных по ключу
+// Преобразование полного имени в строку вида "Прохоров А.П."
+const getShortName = (fullName) => {
+  const parts = fullName.split(' ');
+  if (parts.length < 2) return fullName;
+  const lastName = parts[0];
+  const initials = parts.slice(1).map(p => p[0] + '.').join('');
+  return `${lastName} ${initials}`;
+};
+
+// Фильтрация по сотруднику: ищем краткое имя в строке исполнителя
+const filterByEmployee = (docs, employeeName) => {
+  if (!employeeName) return docs;
+  const short = getShortName(employeeName);
+  return docs.filter(doc => doc["исполнитель"] && doc["исполнитель"].includes(short));
+};
+
 const getCategoryData = (key) => {
   switch (key) {
     case 'all': return sedAll;
@@ -53,23 +65,15 @@ const getCategoryData = (key) => {
   }
 };
 
-// Фильтрация массива документов по сотруднику (по полю исполнитель)
-const filterByEmployee = (docs, employeeName) => {
-  if (!employeeName) return docs; // "Все сотрудники"
-  return docs.filter(doc => doc["исполнитель"].includes(employeeName));
-};
-
 const columnHeaders = ['Вид', 'К', '№ РК', 'Дата рег.', 'Содержание', 'Корр./Подписал', 'Автор резолюции/№ пункта', 'Исполнитель', 'План', 'Текст поручения', 'Дата исп.', 'Файлы'];
 
 export default function SedControl() {
-  // Состояния
   const [expandedCat, setExpandedCat] = useState(null);
-  const [selectedEmployee, setSelectedEmployee] = useState(''); // пустая строка = "Все сотрудники"
+  const [selectedEmployee, setSelectedEmployee] = useState('');
   const [showControlModal, setShowControlModal] = useState(false);
   const [uploadedFile, setUploadedFile] = useState(null);
   const [controlReport, setControlReport] = useState(null);
 
-  // Получаем отфильтрованные по сотруднику данные для всех категорий
   const filteredData = useMemo(() => {
     const empName = selectedEmployee;
     return {
@@ -81,16 +85,10 @@ export default function SedControl() {
     };
   }, [selectedEmployee]);
 
-  // Общее количество документов сотрудника (для нагрузки)
   const totalDocs = useMemo(() => {
-    let sum = 0;
-    for (const key in filteredData) {
-      sum += filteredData[key].length;
-    }
-    return sum;
+    return Object.values(filteredData).reduce((sum, arr) => sum + arr.length, 0);
   }, [filteredData]);
 
-  // Уровень нагрузки на основе общего числа документов
   const workloadLevel = useMemo(() => {
     if (totalDocs === 0) return 'Нет данных';
     if (totalDocs <= 5) return 'Низкая нагрузка';
@@ -98,7 +96,6 @@ export default function SedControl() {
     return 'Высокая нагрузка';
   }, [totalDocs]);
 
-  // Данные для круговой диаграммы (исключая "Все")
   const pieData = useMemo(() => {
     return categories
       .filter(c => c.key !== 'all')
@@ -109,27 +106,22 @@ export default function SedControl() {
       }));
   }, [filteredData]);
 
-  // Переключение раскрытия категории
   const toggleCategory = (key) => {
     setExpandedCat(prev => prev === key ? null : key);
   };
 
-  // Обработчик загрузки файла в «Исполнительском контроле»
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
     setUploadedFile(file);
     setControlReport(null);
   };
 
-  // Генерация отчета (используем мок)
   const generateControlReport = () => {
-    // В реальности здесь был бы парсинг Excel, показываем мок
     setControlReport(controlReportMock);
   };
 
   return (
     <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-      {/* Заголовок и выбор сотрудника */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-3">
         <h2 className="text-lg font-semibold text-gray-700">Контроль СЭД</h2>
         <div className="flex items-center gap-3">
@@ -145,7 +137,6 @@ export default function SedControl() {
               </option>
             ))}
           </select>
-          {/* Кнопка "Исполнительский контроль" */}
           <button
             onClick={() => setShowControlModal(true)}
             className="text-sm bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition"
@@ -155,16 +146,13 @@ export default function SedControl() {
         </div>
       </div>
 
-      {/* Индикатор нагрузки */}
       {selectedEmployee && (
         <div className="mb-4 text-sm text-gray-600">
           Нагрузка сотрудника: <span className="font-medium">{workloadLevel}</span> (документов: {totalDocs})
         </div>
       )}
 
-      {/* Диаграмма и кнопки категорий */}
       <div className="flex flex-col lg:flex-row lg:items-start gap-6">
-        {/* Круговая диаграмма */}
         <div className="flex-shrink-0 flex justify-center">
           <PieChart width={180} height={180}>
             <Pie
@@ -182,7 +170,6 @@ export default function SedControl() {
           </PieChart>
         </div>
 
-        {/* Кнопки категорий */}
         <div className="flex-1 flex flex-wrap gap-2 content-start">
           {categories.map(cat => {
             const count = filteredData[cat.key]?.length || 0;
@@ -212,7 +199,6 @@ export default function SedControl() {
         </div>
       </div>
 
-      {/* Таблица документов (раскрывается) */}
       {expandedCat && (
         <div className="overflow-x-auto mt-6">
           <table className="w-full text-xs border-collapse">
@@ -251,7 +237,6 @@ export default function SedControl() {
         </div>
       )}
 
-      {/* Модальное окно "Исполнительский контроль" */}
       {showControlModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl p-6 max-w-4xl w-full max-h-[90vh] overflow-auto shadow-lg">
