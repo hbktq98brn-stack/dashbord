@@ -3,47 +3,31 @@ import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer
 } from 'recharts';
 
-// Форматирование даты для заголовка
+// Форматирование даты
 const formatDate = (date) =>
   date.toLocaleDateString('ru', { day: 'numeric', month: 'long', year: 'numeric' });
 
-// Формирование заголовка сводки
 const getReportTitle = (periodKey, startDate, endDate) => {
   const endStr = formatDate(endDate);
   switch (periodKey) {
-    case 'day':
-      return `Сводка о результатах работы ОИТ и ОЦТ за ${endStr}`;
-    case 'week':
-      return `Сводка о результатах работы ОИТ и ОЦТ за неделю с ${formatDate(startDate)} по ${endStr}`;
-    case 'month':
-      return `Сводка о результатах работы ОИТ и ОЦТ за месяц с ${formatDate(startDate)} по ${endStr}`;
-    case 'year':
-      return `Сводка о результатах работы ОИТ и ОЦТ за год с ${formatDate(startDate)} по ${endStr}`;
-    default:
-      return `Сводка о результатах работы ОИТ и ОЦТ за ${endStr}`;
+    case 'day': return `Сводка о результатах работы ОИТ и ОЦТ за ${endStr}`;
+    case 'week': return `Сводка о результатах работы ОИТ и ОЦТ за неделю с ${formatDate(startDate)} по ${endStr}`;
+    case 'month': return `Сводка о результатах работы ОИТ и ОЦТ за месяц с ${formatDate(startDate)} по ${endStr}`;
+    case 'year': return `Сводка о результатах работы ОИТ и ОЦТ за год с ${formatDate(startDate)} по ${endStr}`;
+    default: return `Сводка о результатах работы ОИТ и ОЦТ за ${endStr}`;
   }
 };
 
-// Получение диапазона дат
 const getDateRange = (periodKey) => {
   const now = new Date();
   const end = new Date(now);
   const start = new Date(now);
   switch (periodKey) {
-    case 'day':
-      start.setHours(0, 0, 0, 0);
-      break;
-    case 'week':
-      start.setDate(now.getDate() - 7);
-      break;
-    case 'month':
-      start.setMonth(now.getMonth() - 1);
-      break;
-    case 'year':
-      start.setFullYear(now.getFullYear() - 1);
-      break;
-    default:
-      start.setHours(0, 0, 0, 0);
+    case 'day': start.setHours(0,0,0,0); break;
+    case 'week': start.setDate(now.getDate() - 7); break;
+    case 'month': start.setMonth(now.getMonth() - 1); break;
+    case 'year': start.setFullYear(now.getFullYear() - 1); break;
+    default: start.setHours(0,0,0,0);
   }
   return { start, end };
 };
@@ -57,7 +41,7 @@ export default function DailyReport({ employees, reports, onSubmit }) {
   // AI-состояния
   const [aiPeriod, setAiPeriod] = useState('day');
   const [showAiModal, setShowAiModal] = useState(false);
-  const [apiKeyInput, setApiKeyInput] = useState('');
+  const [apiKeyInput, setApiKeyInput] = useState(''); // GigaChat auth key
   const [aiSummary, setAiSummary] = useState('');
   const [aiReportTitle, setAiReportTitle] = useState('');
   const [isAiLoading, setIsAiLoading] = useState(false);
@@ -74,7 +58,6 @@ export default function DailyReport({ employees, reports, onSubmit }) {
     setTimeout(() => setSubmittedEmp(null), 2000);
   };
 
-  // Ежедневная статистика для формы и диаграммы
   const today = new Date().toISOString().slice(0, 10);
   const reportStatus = employees.reduce((acc, emp) => {
     acc[emp.id] = reports.some(r => r.employeeId === emp.id && r.date.startsWith(today));
@@ -90,10 +73,10 @@ export default function DailyReport({ employees, reports, onSubmit }) {
     })
     .filter(item => item.hours > 0);
 
-  // Генерация AI-сводки с новым промптом
-  const generateAiSummary = useCallback(async () => {
+  // Генерация отчёта через GigaChat API
+  const generateReport = useCallback(async () => {
     if (!apiKeyInput.trim()) {
-      setAiError('Введите API-ключ OpenRouter');
+      setAiError('Введите ключ авторизации GigaChat');
       return;
     }
 
@@ -112,13 +95,11 @@ export default function DailyReport({ employees, reports, onSubmit }) {
     const title = getReportTitle(aiPeriod, start, end);
     setAiReportTitle(title);
 
-    // Строим текст всех отчётов
     const reportText = filteredReports.map(r => {
       const emp = employees.find(e => e.id === r.employeeId);
       return `${emp ? emp.name : 'Сотрудник'}: ${r.hours}ч — ${r.comment} (дата: ${new Date(r.date).toLocaleDateString('ru')})`;
     }).join('\n');
 
-    // Улучшенный промпт – группировка по блокам, измеримые результаты
     const prompt = `Ты — руководитель отдела. Проанализируй ежедневные отчёты сотрудников за период и составь аналитическую сводку.
 ${title}
 
@@ -135,14 +116,14 @@ ${reportText}
     setIsAiLoading(true);
     setAiError('');
     try {
-      const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      const res = await fetch('https://gigachat.devices.sberbank.ru/api/v1/chat/completions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${apiKeyInput.trim()}`
         },
         body: JSON.stringify({
-          model: 'google/gemini-2.0-flash-001',
+          model: 'GigaChat:latest',
           messages: [{ role: 'user', content: prompt }],
           temperature: 0.4,
           max_tokens: 1500
@@ -212,15 +193,15 @@ ${reportText}
         )}
       </form>
 
-      {/* Кнопка AI-сводки с выбором периода */}
+      {/* Кнопка "Сформировать отчет" */}
       <div className="mt-4 flex items-center gap-3 flex-wrap">
         <button
           onClick={openAiModal}
           className="text-sm bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700"
         >
-          🧠 AI-сводка
+          🧠 Сформировать отчет
         </button>
-        <span className="text-xs text-gray-400">требуется ключ OpenRouter</span>
+        <span className="text-xs text-gray-400">требуется ключ GigaChat</span>
       </div>
 
       {/* Диаграмма загрузки за сегодня */}
@@ -232,7 +213,7 @@ ${reportText}
           <ResponsiveContainer width="100%" height={Math.max(todayLoad.length * 40, 80)}>
             <BarChart data={todayLoad} layout="vertical" margin={{ left: 10 }}>
               <XAxis type="number" />
-              <YAxis type="category" dataKey="name" width={150} />
+              <YAxis type="category" dataKey="name" width={150} tick={{ fontSize: 10 }} />
               <Tooltip />
               <Bar dataKey="hours" fill="#3b82f6" barSize={20} />
             </BarChart>
@@ -242,16 +223,15 @@ ${reportText}
         )}
       </div>
 
-      {/* Модальное окно AI */}
+      {/* Модальное окно формирования отчета */}
       {showAiModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl p-6 max-w-3xl w-full max-h-[90vh] overflow-auto shadow-lg">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold">AI-сводка</h3>
+              <h3 className="text-lg font-semibold">Сформировать отчет</h3>
               <button onClick={() => setShowAiModal(false)} className="text-gray-400 hover:text-gray-600">✕</button>
             </div>
 
-            {/* Выбор периода и ключ */}
             <div className="mb-4 space-y-3">
               <div className="flex gap-2 items-center">
                 <label className="text-sm font-medium">Период:</label>
@@ -269,18 +249,18 @@ ${reportText}
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  API-ключ OpenRouter
+                  Ключ авторизации GigaChat
                 </label>
                 <div className="flex gap-2">
                   <input
                     type="password"
                     value={apiKeyInput}
                     onChange={e => setApiKeyInput(e.target.value)}
-                    placeholder="sk-or-..."
+                    placeholder="Введите токен доступа..."
                     className="flex-1 border rounded p-2 text-sm"
                   />
                   <button
-                    onClick={generateAiSummary}
+                    onClick={generateReport}
                     disabled={isAiLoading}
                     className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 disabled:opacity-50 text-sm"
                   >
@@ -288,7 +268,7 @@ ${reportText}
                   </button>
                 </div>
                 <p className="text-xs text-gray-400 mt-1">
-                  Ключ не сохраняется. Получить: openrouter.ai/keys
+                  Ключ не сохраняется. Получить: developers.sber.ru
                 </p>
               </div>
             </div>
