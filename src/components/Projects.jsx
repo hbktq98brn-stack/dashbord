@@ -52,7 +52,7 @@ const projectsData = [
   {
     id: 5,
     title: 'Цифровой ИД',
-    controlPoints: { total: 0, done: 0, risk: 0, overdue: 0 },
+    controlPoints: { total: 0, done: 0, risk: 0, overdue: 0 }, // не используется, но status определим по прогрессу
     type: 'digital_id',
     digitalIdData: {
       organizations: {
@@ -109,15 +109,23 @@ const projectsData = [
   }
 ];
 
-// Компонент для отображения индикации контрольных точек
-const ControlPointsIndicator = ({ total, done, risk, overdue }) => (
-  <div className="absolute top-3 right-3 flex gap-2 text-xs">
-    <span className="text-gray-500" title="Всего">Σ {total}</span>
-    <span className="text-green-600" title="Выполнено">✓ {done}</span>
-    <span className="text-yellow-600" title="Под риском">⚠ {risk}</span>
-    <span className="text-red-600" title="Просрочено">✗ {overdue}</span>
-  </div>
-);
+// Определение статуса проекта по КТ
+const getProjectStatus = (project) => {
+  if (project.type === 'digital_id') {
+    // для Цифрового ИД: считаем прогресс по пользователям МАХ
+    const current = 100000; // сейчас 100 тыс
+    const target = 500000;  // цель к октябрю
+    const progress = current / target;
+    if (progress >= 1) return 'green';
+    if (progress >= 0.5) return 'yellow';
+    return 'red';
+  }
+  const { done, total, risk, overdue } = project.controlPoints;
+  if (overdue > 0) return 'red';
+  if (risk > 0) return 'yellow';
+  if (done === total) return 'green';
+  return 'yellow'; // если не все выполнены, но рисков и просрочек нет – жёлтый
+};
 
 export default function Projects() {
   const [projects, setProjects] = useState(projectsData.map(p => ({ ...p, responsible: null })));
@@ -144,7 +152,6 @@ export default function Projects() {
     selected.forEach(p => {
       text += `**${p.title}**\n`;
       if (p.type === 'digital_id') {
-        // Исправлено: корректное суммирование connected
         const orgs = p.digitalIdData.organizations;
         const totalConnected = orgs.theatres.connected + orgs.museums.connected +
           orgs.cinema.connected + orgs.exhibitions.connected +
@@ -166,6 +173,13 @@ export default function Projects() {
     setReportText(text);
   };
 
+  // Классы для статуса
+  const statusClasses = {
+    green: 'status-green bg-green-50',
+    yellow: 'status-yellow bg-yellow-50',
+    red: 'status-red bg-red-50 animate-pulse'
+  };
+
   return (
     <div>
       <div className="mb-4 flex justify-end">
@@ -178,46 +192,61 @@ export default function Projects() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {projects.map(project => (
-          <div
-            key={project.id}
-            className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 relative cursor-pointer hover:shadow-md transition-shadow"
-            onClick={() => handleProjectClick(project)}
-          >
-            {project.type !== 'digital_id' && (
-              <ControlPointsIndicator
-                total={project.controlPoints.total}
-                done={project.controlPoints.done}
-                risk={project.controlPoints.risk}
-                overdue={project.controlPoints.overdue}
-              />
-            )}
-            <h3 className="text-lg font-semibold text-gray-800 mb-2 mt-6">{project.title}</h3>
+        {projects.map(project => {
+          const status = getProjectStatus(project);
+          const { total, done, risk, overdue } = project.controlPoints;
+          const responsible = employees.find(e => e.id === project.responsible);
 
-            <div className="mt-2" onClick={e => e.stopPropagation()}>
-              <label className="text-xs text-gray-500">Ответственный:</label>
-              <select
-                value={project.responsible || ''}
-                onChange={e => handleSetResponsible(project.id, Number(e.target.value) || null)}
-                className="w-full mt-1 text-xs border rounded p-1"
-              >
-                <option value="">Не назначен</option>
-                {employees.map(emp => (
-                  <option key={emp.id} value={emp.id}>{emp.name}</option>
-                ))}
-              </select>
-            </div>
-            {project.type === 'digital_id' && (
-              <div className="text-xs text-gray-500 mt-2">
-                Организаций подключено: {Object.values(project.digitalIdData.organizations).reduce((sum, o) => sum + o.connected, 0)}
-                <br />
-                Пользователей МАХ: {project.digitalIdData.maxUsersChart[1].value / 1000} тыс.
+          return (
+            <div
+              key={project.id}
+              onClick={() => handleProjectClick(project)}
+              className={`metric-card p-4 rounded-xl cursor-pointer hover:shadow-md transition-shadow ${statusClasses[status]} relative`}
+            >
+              {/* Индикатор контрольных точек – маленькие иконки в правом верхнем углу */}
+              {project.type !== 'digital_id' && (
+                <div className="absolute top-2 right-2 flex gap-1 text-xs">
+                  <span title="Всего" className="text-gray-500">Σ{total}</span>
+                  <span title="Выполнено" className="text-green-600">✓{done}</span>
+                  <span title="Под риском" className="text-yellow-600">⚠{risk}</span>
+                  <span title="Просрочено" className="text-red-600">✗{overdue}</span>
+                </div>
+              )}
+
+              <h3 className="text-base font-semibold text-gray-800 mb-2 pr-16">{project.title}</h3>
+
+              {/* Для Цифрового ИД покажем краткую сводку */}
+              {project.type === 'digital_id' && (
+                <div className="text-xs text-gray-500 mb-2">
+                  Подключено организаций: {Object.values(project.digitalIdData.organizations).reduce((s, o) => s + o.connected, 0)}
+                  <br />
+                  Пользователи МАХ: 100 тыс.
+                </div>
+              )}
+
+              {/* Выбор ответственного */}
+              <div onClick={e => e.stopPropagation()} className="mt-2">
+                <label className="text-xs text-gray-500 block mb-1">Ответственный:</label>
+                <select
+                  value={project.responsible || ''}
+                  onChange={e => handleSetResponsible(project.id, Number(e.target.value) || null)}
+                  className="w-full text-xs border rounded p-1 bg-white"
+                >
+                  <option value="">Не назначен</option>
+                  {employees.map(emp => (
+                    <option key={emp.id} value={emp.id}>{emp.name}</option>
+                  ))}
+                </select>
+                {responsible && (
+                  <p className="text-xs text-gray-600 mt-1">{responsible.name}</p>
+                )}
               </div>
-            )}
-          </div>
-        ))}
+            </div>
+          );
+        })}
       </div>
 
+      {/* Модальные окна (дорожная карта, сводка Цифрового ИД, отчёт) – без изменений */}
       {selectedProject && selectedProject.type !== 'digital_id' && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl p-6 max-w-3xl w-full max-h-[80vh] overflow-auto shadow-lg">
