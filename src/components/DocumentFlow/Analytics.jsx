@@ -1,29 +1,37 @@
-import React from 'react'
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+import React, { useMemo } from 'react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { format, subDays } from 'date-fns';
 
-const mockTrend = [
-  { day: 'Пн', просрочек: 3, закрыто: 12 },
-  { day: 'Вт', просрочек: 5, закрыто: 8 },
-  { day: 'Ср', просрочек: 2, закрыто: 15 },
-  { day: 'Чт', просрочек: 4, закрыто: 10 },
-  { day: 'Пт', просрочек: 1, закрыто: 14 }
-]
+export default function Analytics({ emails }) {
+  const chartData = useMemo(() => {
+    const days = [];
+    for (let i = 6; i >= 0; i--) {
+      const date = subDays(new Date(), i);
+      const dateStr = date.toISOString().slice(0, 10);
+      const dayEmails = emails.filter(e => e.date && e.date.startsWith(dateStr));
+      days.push({
+        day: format(date, 'dd.MM'),
+        просрочек: dayEmails.filter(e => e.overdue).length,
+        закрыто: dayEmails.filter(e => e.status === 'closed').length,
+      });
+    }
+    return days;
+  }, [emails]);
 
-export default function Analytics() {
   return (
     <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
       <h2 className="text-lg font-semibold text-gray-700 mb-4">Аналитика просрочек и закрытий</h2>
       <ResponsiveContainer width="100%" height={200}>
-        <LineChart data={mockTrend}>
+        <LineChart data={chartData}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="day" />
-          <YAxis />
+          <YAxis allowDecimals={false} />
           <Tooltip />
           <Line type="monotone" dataKey="просрочек" stroke="#ef4444" strokeWidth={2} />
           <Line type="monotone" dataKey="закрыто" stroke="#10b981" strokeWidth={2} />
         </LineChart>
       </ResponsiveContainer>
-      <p className="text-xs text-gray-400 mt-2">*тренд за текущую неделю (мок)</p>
+      <p className="text-xs text-gray-400 mt-2">*на основе данных СЭД за последние 7 дней</p>
     </div>
-  )
+  );
 }
