@@ -19,23 +19,41 @@ const categories = [
   { key: 'overdue', label: 'ПРОСРОЧЕНО', url: 'http://192.168.10.133/delou/Pages/Cabinet/Folder.aspx?folder_id=1&folders=1|2&isn_request=6557674&card_id=0.3UQL9.&cabinet_id=6998476' },
 ];
 
+// Мок-данные для исполнительского контроля – теперь под новую структуру
 const controlReportMock = [
   {
-    num: '26-41708',
-    date: '17.06.2026',
-    content: 'О направлении на согласование проекта постановления Правительства РФ',
-    execComment: 'Проект подготовлен, отправлен на согласование',
-    finalComment: 'Утверждён, замечания устранены',
-    link: 'Письмо от 16.06.2026 № 22184-ВИ/Д12и',
+    no: 1,
+    regNumber: '26-41708',
+    regDate: '17.06.2026',
+    correspondent: 'Минэкономразвития России – Ильичев В.Е.',
+    corrResolution: 'Направлен на согласование проект постановления Правительства РФ «Об утверждении Положения о Портале ВЭИ»',
+    summary: 'Проект постановления Правительства РФ «Об утверждении Положения о Портале ВЭИ»',
+    ministryResolution: 'Ломакина Е.А. – проработать, подготовить заключение',
+    planDate: '24.06.2026',
+    executorComment: '!Прохоров А.П. – проект проработан, замечания направлены разработчику'
   },
   {
-    num: '26-43070',
-    date: '22.06.2026',
-    content: 'О согласовании описаний целевых состояний по мерам поддержки',
-    execComment: 'Проведена ВКС, замечания внесены',
-    finalComment: 'Согласовано',
-    link: 'Письмо от 19.06.2026 № Д09и-19836',
+    no: 2,
+    regNumber: '26-43070',
+    regDate: '22.06.2026',
+    correspondent: 'Минэкономразвития России – Албычев К.С.',
+    corrResolution: 'О согласовании описаний целевых состояний по мерам поддержки участников СВО',
+    summary: 'Описания целевых состояний по мерам поддержки участников СВО',
+    ministryResolution: 'Ломакина Е.А. – принять личное участие в ВКС, заявить кандидатуры участников',
+    planDate: '22.06.2026',
+    executorComment: '!Прохоров А.П. – проведена ВКС, замечания внесены, итоговый документ согласован'
   },
+  {
+    no: 3,
+    regNumber: '22-34597',
+    regDate: '06.07.2022',
+    correspondent: 'Правительство РФ – Чернышенко Д.',
+    corrResolution: 'Перечень поручений федеральным и региональным РЦТ по итогам совещания 29.06.2022',
+    summary: 'Перечень поручений по итогам совещания',
+    ministryResolution: 'Красилова Н.В. – обеспечить исполнение',
+    planDate: '10.07.2026',
+    executorComment: '!Прохоров А.П. – пункт 15 выполняется ежемесячно, последний отчёт направлен'
+  }
 ];
 
 // Преобразование полного имени в строку вида "Прохоров А.П."
@@ -239,7 +257,7 @@ export default function SedControl() {
 
       {showControlModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 max-w-4xl w-full max-h-[90vh] overflow-auto shadow-lg">
+          <div className="bg-white rounded-xl p-6 max-w-6xl w-full max-h-[90vh] overflow-auto shadow-lg">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold">Исполнительский контроль</h3>
               <button onClick={() => setShowControlModal(false)} className="text-gray-400 hover:text-gray-600">✕</button>
@@ -267,26 +285,30 @@ export default function SedControl() {
 
               {controlReport && (
                 <div className="overflow-x-auto mt-4">
-                  <table className="w-full text-sm border-collapse">
+                  <table className="w-full text-xs border-collapse">
                     <thead>
                       <tr className="bg-gray-50">
-                        <th className="p-2 border text-left">№ документа</th>
-                        <th className="p-2 border text-left">Дата</th>
-                        <th className="p-2 border text-left">Содержание</th>
-                        <th className="p-2 border text-left">Комментарий исполнителя</th>
-                        <th className="p-2 border text-left">Итоговый комментарий</th>
-                        <th className="p-2 border text-left">Ссылка (письмо)</th>
+                        <th className="p-2 border text-left">№ п/п</th>
+                        <th className="p-2 border text-left">Рег. номер/дата</th>
+                        <th className="p-2 border text-left">Корреспондент / кто подписал</th>
+                        <th className="p-2 border text-left">Резолюция корреспондента</th>
+                        <th className="p-2 border text-left">Краткое содержание сопроводительного документа</th>
+                        <th className="p-2 border text-left">Резолюция Министерства культуры РФ (Автор/текст)</th>
+                        <th className="p-2 border text-left">План. дата исполнения</th>
+                        <th className="p-2 border text-left">Исполнитель + комментарий по документу</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {controlReport.map((row, idx) => (
-                        <tr key={idx} className="border-t">
-                          <td className="p-2 border">{row.num}</td>
-                          <td className="p-2 border">{row.date}</td>
-                          <td className="p-2 border">{row.content}</td>
-                          <td className="p-2 border">{row.execComment}</td>
-                          <td className="p-2 border">{row.finalComment}</td>
-                          <td className="p-2 border">{row.link}</td>
+                      {controlReport.map((row) => (
+                        <tr key={row.no} className="border-t hover:bg-gray-50">
+                          <td className="p-2 border">{row.no}</td>
+                          <td className="p-2 border whitespace-nowrap">{row.regNumber}<br/>{row.regDate}</td>
+                          <td className="p-2 border">{row.correspondent}</td>
+                          <td className="p-2 border">{row.corrResolution}</td>
+                          <td className="p-2 border">{row.summary}</td>
+                          <td className="p-2 border">{row.ministryResolution}</td>
+                          <td className="p-2 border whitespace-nowrap">{row.planDate}</td>
+                          <td className="p-2 border">{row.executorComment}</td>
                         </tr>
                       ))}
                     </tbody>
