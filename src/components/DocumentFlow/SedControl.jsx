@@ -70,18 +70,18 @@ export default function SedControl() {
             <tbody>
               {getData(expandedCat).map((doc, idx) => (
                 <tr key={idx} className="border-t hover:bg-gray-50">
-                  <td className="p-2 border">{doc.вид}</td>
-                  <td className="p-2 border">{doc.к}</td>
-                  <td className="p-2 border">{doc.№_РК}</td>
-                  <td className="p-2 border whitespace-nowrap">{doc.дата_рег}</td>
-                  <td className="p-2 border max-w-[200px] truncate">{doc.содержание}</td>
-                  <td className="p-2 border">{doc.корр}</td>
-                  <td className="p-2 border">{doc.автор_резолюции}</td>
-                  <td className="p-2 border">{doc.исполнитель}</td>
-                  <td className="p-2 border whitespace-nowrap">{doc.план}</td>
-                  <td className="p-2 border max-w-[200px] truncate">{doc.текст_поручения}</td>
-                  <td className="p-2 border whitespace-nowrap">{doc.дата_исп}</td>
-                  <td className="p-2 border">{doc.файлы}</td>
+                  <td className="p-2 border">{doc["вид"]}</td>
+                  <td className="p-2 border">{doc["к"]}</td>
+                  <td className="p-2 border">{doc["№_РК"]}</td>
+                  <td className="p-2 border whitespace-nowrap">{doc["дата_рег"]}</td>
+                  <td className="p-2 border max-w-[200px] truncate">{doc["содержание"]}</td>
+                  <td className="p-2 border">{doc["корр"]}</td>
+                  <td className="p-2 border">{doc["автор_резолюции"]}</td>
+                  <td className="p-2 border">{doc["исполнитель"]}</td>
+                  <td className="p-2 border whitespace-nowrap">{doc["план"]}</td>
+                  <td className="p-2 border max-w-[200px] truncate">{doc["текст_поручения"]}</td>
+                  <td className="p-2 border whitespace-nowrap">{doc["дата_исп"]}</td>
+                  <td className="p-2 border">{doc["файлы"]}</td>
                 </tr>
               ))}
             </tbody>
