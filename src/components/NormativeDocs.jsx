@@ -374,7 +374,7 @@ export default function NormativeDocs() {
           'Authorization': `Bearer ${apiKey.trim()}`
         },
         body: JSON.stringify({
-          model: 'google/gemini-2.0-flash-001',
+          model: 'google/gemini-3.5-flash',
           messages: [{ role: 'user', content: prompt }],
           temperature: 0.3,
           max_tokens: 600
