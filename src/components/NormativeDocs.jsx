@@ -404,7 +404,7 @@ export default function NormativeDocs() {
           onClick={() => setShowSearchModal(true)}
           className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 text-sm"
         >
-          🔍 ИИ-поиск по документам
+          ИИ-поиск по документам
         </button>
       </div>
 
