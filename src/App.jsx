@@ -8,8 +8,8 @@ import IBIT from './components/IBIT';
 import GisInfra from './components/GisInfra';
 import StatsAnalytics from './components/StatsAnalytics';
 import Finance from './components/Finance';
-import { useLog } from './hooks/useLog';
 import NormativeDocs from './components/NormativeDocs';
+import { useLog } from './hooks/useLog';
 
 function AppContent() {
   const { user, logout } = useAuth();
