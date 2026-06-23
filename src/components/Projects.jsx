@@ -137,8 +137,52 @@ const projectsData = [
           }
         ]
       },
-      { id: '2', name: 'Самостоятельное предоставление сведений субъектами РФ в сфере культуры в АИС «Статистика»', unit: 'ед', plan: 500, fact: null, planDate: '01.12.2026', factDate: null, responsible: 'Егорова П. Г.', status: 'В работе', udPlan: null, udProject: '0%', roadmap: [] },
-      { id: '3', name: 'Сокращение количества согласований в документах по основным видам деятельности', unit: 'ед', plan: 25, fact: null, planDate: '31.12.2026', factDate: null, responsible: 'Кондратьев Д. И.', status: 'В работе', udPlan: null, udProject: '0%', roadmap: [] },
+      {
+  id: '2',
+  name: 'Самостоятельное предоставление сведений субъектами РФ в сфере культуры в АИС «Статистика»',
+  unit: 'ед',
+  plan: 14240,
+  fact: null,
+  planDate: '21.12.2026',
+  factDate: null,
+  responsible: 'Никифоров Н. В.',
+  status: 'В работе',
+  udPlan: null,
+  udProject: '0%',
+  roadmap: [
+    { no: '2.1', name: 'Ручной ввод данных/клики', unit: 'ручной ввод - клики', plan: 14240, fact: null, planDate: '21.12.2026', factDate: null, responsible: 'Никифоров Н. В.', status: 'В работе', udPlan: null, udProject: '0%' },
+    { no: '2.2', name: 'Исполнение проекта', unit: 'усл. ед', plan: 3, fact: null, planDate: '21.12.2026', factDate: null, responsible: 'Никифоров Н. В.', status: 'В работе', udPlan: null, udProject: '0%',
+      children: [
+        { no: '2.2.1', name: 'Техническая подготовка алгоритма внесения данных', unit: 'усл. ед', plan: 1, fact: null, planDate: '30.06.2026', factDate: null, responsible: 'Никифоров Н. В.', status: 'В работе', udPlan: null, udProject: '0%' },
+        { no: '2.2.2', name: 'Внедрение возможности самостоятельного предоставления сведений о посещаемости учреждений культуры в АИС "Статистика"', unit: 'усл. ед', plan: 1, fact: null, planDate: '31.07.2026', factDate: null, responsible: 'Никифоров Н. В.', status: 'В работе', udPlan: null, udProject: '0%' },
+        { no: '2.2.3', name: 'Направление куратору проекта служебной записки о завершении проекта с оценкой достижения показателей в пересчете на год', unit: 'усл. ед', plan: 1, fact: null, planDate: '21.12.2026', factDate: null, responsible: 'Никифоров Н. В.', status: 'В работе', udPlan: null, udProject: '0%' }
+      ]
+    }
+  ]
+},
+      {
+  id: '3',
+  name: 'Сокращение количества согласований в документах по основным видам деятельности',
+  unit: 'ед',
+  plan: 126,
+  fact: null,
+  planDate: '21.12.2026',
+  factDate: null,
+  responsible: 'Никифоров Н. В.',
+  status: 'В работе',
+  udPlan: null,
+  udProject: '0%',
+  roadmap: [
+    { no: '3.1', name: 'Избыточные согласования', unit: 'избыточные согласования', plan: 126, fact: null, planDate: '21.12.2026', factDate: null, responsible: 'Никифоров Н. В.', status: 'В работе', udPlan: null, udProject: '0%' },
+    { no: '3.2', name: 'Исполнение проекта', unit: 'усл. ед', plan: 3, fact: null, planDate: '21.12.2026', factDate: null, responsible: 'Никифоров Н. В.', status: 'В работе', udPlan: null, udProject: '0%',
+      children: [
+        { no: '3.2.1', name: 'Аналитика типов документов по основным видам деятельности', unit: 'усл. ед', plan: 1, fact: null, planDate: '30.06.2026', factDate: null, responsible: 'Никифоров Н. В.', status: 'В работе', udPlan: null, udProject: '0%' },
+        { no: '3.2.2', name: 'Внедрение нового алгоритма согласования документов по основным видам деятельности', unit: 'усл. ед', plan: 1, fact: null, planDate: '30.09.2026', factDate: null, responsible: 'Никифоров Н. В.', status: 'В работе', udPlan: null, udProject: '0%' },
+        { no: '3.2.3', name: 'Направление куратору проекта служебной записки о завершении проекта с оценкой достижения показателей в пересчете на год', unit: 'усл. ед', plan: 1, fact: null, planDate: '21.12.2026', factDate: null, responsible: 'Никифоров Н. В.', status: 'В работе', udPlan: null, udProject: '0%' }
+      ]
+    }
+  ]
+},
       { id: '4', name: 'Составление типовых ответов на массовые обращения граждан', unit: 'ед', plan: 40, fact: null, planDate: '15.11.2026', factDate: null, responsible: 'Макушин А. Ю.', status: 'В работе', udPlan: null, udProject: '0%', roadmap: [] },
       { id: '5', name: 'Предзаполнение регистрационных карточек типовых входящих обращений граждан', unit: 'ед', plan: 1000, fact: null, planDate: '01.10.2026', factDate: null, responsible: 'Илюхина А. С.', status: 'В работе', udPlan: null, udProject: '0%', roadmap: [] },
       { id: '6', name: 'Реализация заявки в отдел административно-хозяйственного обеспечения через внутренний портал', unit: 'ед', plan: 1, fact: null, planDate: '30.09.2026', factDate: null, responsible: 'Крайнов В. С.', status: 'В работе', udPlan: null, udProject: '0%', roadmap: [] },
