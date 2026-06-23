@@ -18,7 +18,7 @@ const ecpData = [
   { id: 10, fio: 'Макушин Алексей Юрьевич', certNumber: 'ECP-2026-010', issuedDate: '30.07.2026', expiryDate: '30.07.2027', installed: true },
 ];
 
-// 2. Учетные записи сотрудников (расширенная версия employees)
+// 2. Учетные записи сотрудников
 const accountsData = employees.map((emp, idx) => ({
   id: emp.id,
   fio: emp.name,
@@ -36,21 +36,21 @@ const attestationPlan = [
   { no: 4, certNumber: '1846.0123.25 от 15.05.2025', room: '42', objectName: 'Серверная', planDate: '15.05.2030', address: 'ул. Тверская, 7', workType: 'Установка доп. вентиляции' },
 ];
 
-// 4. Отчет о работе ОИТ (пустой массив, данные загружаются из localStorage)
+// 4. Отчет о работе ОИТ
 const loadOitTasks = () => {
   try {
     return JSON.parse(localStorage.getItem('oit_tasks') || '[]');
   } catch { return []; }
 };
 
-// 5. Антивирусная защита (статус по сотрудникам)
+// 5. Антивирусная защита
 const avStatusData = employees.map(emp => ({
   fio: emp.name,
-  updated: Math.random() > 0.1, // 90% имеют обновления
+  updated: Math.random() > 0.1,
   lastUpdate: new Date(Date.now() - Math.floor(Math.random() * 7 * 24 * 60 * 60 * 1000)).toLocaleDateString('ru'),
 }));
 
-// 6. Резервное копирование (последние дни)
+// 6. Резервное копирование
 const backupData = [
   { date: '23.06.2026', status: 'Успешно' },
   { date: '22.06.2026', status: 'Успешно' },
@@ -69,19 +69,16 @@ const incidentsData = [
 // ---------- ТЕМЫ ЗАДАЧ ОИТ ----------
 const taskTopics = ['Установка ЭЦП', 'Установка ПО и компонентов', 'Техническая поддержка', 'Обновление антивируса', 'Настройка сети'];
 
-// ---------- КОМПОНЕНТ ----------
 export default function IBIT() {
-  // Состояния
   const [activeCard, setActiveCard] = useState(null);
   const [oitTasks, setOitTasks] = useState(loadOitTasks);
   const [showOitForm, setShowOitForm] = useState(false);
 
-  // Сохранение задач ОИТ в localStorage
   useEffect(() => {
     localStorage.setItem('oit_tasks', JSON.stringify(oitTasks));
   }, [oitTasks]);
 
-  // Подсчёт индикаторов для карточек
+  // Подсчёт индикаторов
   const ecpTotal = ecpData.length;
   const ecpExpiring7d = ecpData.filter(e => {
     const exp = new Date(e.expiryDate.split('.').reverse().join('-'));
@@ -99,7 +96,6 @@ export default function IBIT() {
 
   const attestationTotal = attestationPlan.length;
 
-  // Для отчета ОИТ – количество задач сегодня
   const todayStr = new Date().toISOString().slice(0, 10);
   const oitTodayTasks = oitTasks.filter(t => t.date.startsWith(todayStr));
   const oitChartData = taskTopics.map(topic => ({
@@ -107,57 +103,45 @@ export default function IBIT() {
     value: oitTodayTasks.filter(t => t.topic === topic).length,
   })).filter(d => d.value > 0);
 
-  // Антивирус: % обновленных
   const avUpdated = avStatusData.filter(a => a.updated).length;
   const avTotal = avStatusData.length;
 
-  // Резервное копирование: последнее состояние
   const lastBackup = backupData[0];
-
-  // Инциденты: открытые
   const openIncidents = incidentsData.filter(i => i.status === 'Открыт').length;
   const totalIncidents = incidentsData.length;
 
-  // Функция добавления задачи ОИТ
-  const addOitTask = (task) => {
-    setOitTasks(prev => [task, ...prev]);
-  };
+  const addOitTask = (task) => setOitTasks(prev => [task, ...prev]);
 
-  // Определение статуса карточки (для цветовой полосы)
+  // Статус карточки (зелёный/жёлтый/красный)
   const getCardStatus = (key) => {
     switch (key) {
-      case 'ecp':
-        if (ecpOverdue > 0) return 'red';
-        if (ecpExpiring7d > 0) return 'yellow';
-        return 'green';
-      case 'accounts':
-        if (accountsBlocked > 0) return 'yellow';
-        return 'green';
-      case 'attestation':
-        return 'yellow'; // плановая работа
-      case 'oitReport':
-        return oitTodayTasks.length > 0 ? 'green' : 'yellow';
-      case 'antivirus':
-        return avUpdated === avTotal ? 'green' : 'yellow';
-      case 'backup':
-        return lastBackup.status === 'Успешно' ? 'green' : 'red';
-      case 'incidents':
-        if (openIncidents > 0) return 'red';
-        return 'green';
+      case 'ecp': return ecpOverdue > 0 ? 'red' : ecpExpiring7d > 0 ? 'yellow' : 'green';
+      case 'accounts': return accountsBlocked > 0 ? 'yellow' : 'green';
+      case 'attestation': return 'green';
+      case 'oitReport': return 'green';
+      case 'antivirus': return avUpdated / avTotal >= 0.95 ? 'green' : 'yellow';
+      case 'backup': return lastBackup.status === 'Успешно' ? 'green' : 'red';
+      case 'incidents': return openIncidents > 0 ? 'red' : 'green';
       default: return 'green';
     }
   };
 
-  // Карточки
+  const statusClasses = {
+    green: 'status-green bg-green-50',
+    yellow: 'status-yellow bg-yellow-50',
+    red: 'status-red bg-red-50 animate-pulse',
+  };
+
+  // Карточки с индикаторами в стиле «Проектов»
   const cards = [
     {
       key: 'ecp',
       title: 'ЭЦП',
       indicators: (
-        <div className="flex gap-1 flex-wrap">
-          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700">Σ{ecpTotal}</span>
-          {ecpExpiring7d > 0 && <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">⏳{ecpExpiring7d}</span>}
-          {ecpOverdue > 0 && <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">✗{ecpOverdue}</span>}
+        <div className="absolute top-2 right-2 flex gap-1 text-xs">
+          <span title="Всего" className="text-gray-500">Σ{ecpTotal}</span>
+          {ecpExpiring7d > 0 && <span title="Истекает через 7 дней" className="text-yellow-600">⏳{ecpExpiring7d}</span>}
+          {ecpOverdue > 0 && <span title="Просрочено" className="text-red-600">✗{ecpOverdue}</span>}
         </div>
       ),
       content: 'Сертификаты ЭЦП',
@@ -166,9 +150,9 @@ export default function IBIT() {
       key: 'accounts',
       title: 'Учетные записи',
       indicators: (
-        <div className="flex gap-1">
-          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700">Σ{accountsTotal}</span>
-          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">🚫{accountsBlocked}</span>
+        <div className="absolute top-2 right-2 flex gap-1 text-xs">
+          <span title="Всего" className="text-gray-500">Σ{accountsTotal}</span>
+          {accountsBlocked > 0 && <span title="Заблокировано" className="text-red-600">🚫{accountsBlocked}</span>}
         </div>
       ),
       content: 'Управление доступом',
@@ -176,48 +160,59 @@ export default function IBIT() {
     {
       key: 'attestation',
       title: 'План переаттестации',
-      indicators: <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700">Всего: {attestationTotal}</span>,
+      indicators: (
+        <div className="absolute top-2 right-2 flex gap-1 text-xs">
+          <span title="Всего" className="text-gray-500">Σ{attestationTotal}</span>
+        </div>
+      ),
       content: 'Аттестация объектов',
     },
     {
       key: 'oitReport',
       title: 'Отчет о работе ОИТ',
-      indicators: <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">Сегодня: {oitTodayTasks.length}</span>,
+      indicators: (
+        <div className="absolute top-2 right-2 flex gap-1 text-xs">
+          <span className="text-blue-600">Сегодня: {oitTodayTasks.length}</span>
+        </div>
+      ),
       content: 'Задачи сотрудников',
     },
     {
       key: 'antivirus',
       title: 'Антивирусная защита',
-      indicators: <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Обновлено {avUpdated}/{avTotal}</span>,
+      indicators: (
+        <div className="absolute top-2 right-2 flex gap-1 text-xs">
+          <span className="text-green-600">Обновлено {avUpdated}/{avTotal}</span>
+        </div>
+      ),
       content: 'Статус обновлений',
     },
     {
       key: 'backup',
       title: 'Резервное копирование',
-      indicators: <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${lastBackup.status === 'Успешно' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>Последнее: {lastBackup.status}</span>,
+      indicators: (
+        <div className="absolute top-2 right-2 flex gap-1 text-xs">
+          <span className={lastBackup.status === 'Успешно' ? 'text-green-600' : 'text-red-600'}>
+            {lastBackup.status === 'Успешно' ? '✓' : '✗'} {lastBackup.status}
+          </span>
+        </div>
+      ),
       content: 'Статус бэкапов',
     },
     {
       key: 'incidents',
       title: 'Инциденты ИБ',
       indicators: (
-        <div className="flex gap-1">
-          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700">Σ{totalIncidents}</span>
-          {openIncidents > 0 && <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Открыто {openIncidents}</span>}
+        <div className="absolute top-2 right-2 flex gap-1 text-xs">
+          <span title="Всего" className="text-gray-500">Σ{totalIncidents}</span>
+          {openIncidents > 0 && <span title="Открыто" className="text-red-600">❗{openIncidents}</span>}
         </div>
       ),
       content: 'Управление инцидентами',
     },
   ];
 
-  // Классы для статуса
-  const statusClasses = {
-    green: 'status-green bg-green-50',
-    yellow: 'status-yellow bg-yellow-50',
-    red: 'status-red bg-red-50 animate-pulse'
-  };
-
-  // Рендер модального окна (без изменений, только вызов setActiveCard)
+  // Модальные окна (содержание без изменений)
   const renderModal = () => {
     if (!activeCard) return null;
     switch (activeCard) {
@@ -230,34 +225,13 @@ export default function IBIT() {
                 <button onClick={() => setActiveCard(null)} className="text-gray-400 hover:text-gray-600">✕</button>
               </div>
               <table className="w-full text-sm">
-                <thead>
-                  <tr className="bg-gray-50">
-                    <th className="p-2 text-left">№</th>
-                    <th className="p-2 text-left">ФИО</th>
-                    <th className="p-2 text-left">Номер сертификата</th>
-                    <th className="p-2 text-left">Дата выдачи</th>
-                    <th className="p-2 text-left">Дата окончания</th>
-                    <th className="p-2 text-left">Установлена/обновлена</th>
-                  </tr>
-                </thead>
+                <thead><tr className="bg-gray-50"><th className="p-2 text-left">№</th><th className="p-2 text-left">ФИО</th><th className="p-2 text-left">Номер сертификата</th><th className="p-2 text-left">Дата выдачи</th><th className="p-2 text-left">Дата окончания</th><th className="p-2 text-left">Установлена/обновлена</th></tr></thead>
                 <tbody>
                   {ecpData.map(ecp => (
                     <tr key={ecp.id} className="border-t">
-                      <td className="p-2">{ecp.id}</td>
-                      <td className="p-2">{ecp.fio}</td>
-                      <td className="p-2">{ecp.certNumber}</td>
-                      <td className="p-2">{ecp.issuedDate}</td>
-                      <td className="p-2">{ecp.expiryDate}</td>
-                      <td className="p-2">
-                        <select
-                          value={ecp.installed ? 'Да' : 'Нет'}
-                          onChange={() => {}} // В реальности нужно менять состояние
-                          className="border rounded p-1 text-xs"
-                        >
-                          <option value="Да">Да</option>
-                          <option value="Нет">Нет</option>
-                        </select>
-                      </td>
+                      <td className="p-2">{ecp.id}</td><td className="p-2">{ecp.fio}</td><td className="p-2">{ecp.certNumber}</td>
+                      <td className="p-2">{ecp.issuedDate}</td><td className="p-2">{ecp.expiryDate}</td>
+                      <td className="p-2"><select value={ecp.installed ? 'Да' : 'Нет'} onChange={() => {}} className="border rounded p-1 text-xs"><option value="Да">Да</option><option value="Нет">Нет</option></select></td>
                     </tr>
                   ))}
                 </tbody>
@@ -265,7 +239,6 @@ export default function IBIT() {
             </div>
           </div>
         );
-
       case 'accounts':
         return (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -275,32 +248,12 @@ export default function IBIT() {
                 <button onClick={() => setActiveCard(null)} className="text-gray-400 hover:text-gray-600">✕</button>
               </div>
               <table className="w-full text-sm">
-                <thead>
-                  <tr className="bg-gray-50">
-                    <th className="p-2 text-left">ФИО</th>
-                    <th className="p-2 text-left">Должность</th>
-                    <th className="p-2 text-left">Отдел</th>
-                    <th className="p-2 text-left">Департамент</th>
-                    <th className="p-2 text-left">Заблокирована</th>
-                  </tr>
-                </thead>
+                <thead><tr className="bg-gray-50"><th className="p-2 text-left">ФИО</th><th className="p-2 text-left">Должность</th><th className="p-2 text-left">Отдел</th><th className="p-2 text-left">Департамент</th><th className="p-2 text-left">Заблокирована</th></tr></thead>
                 <tbody>
                   {accountsData.map(acc => (
                     <tr key={acc.id} className="border-t">
-                      <td className="p-2">{acc.fio}</td>
-                      <td className="p-2">{acc.position}</td>
-                      <td className="p-2">{acc.division}</td>
-                      <td className="p-2">{acc.department}</td>
-                      <td className="p-2">
-                        <select
-                          value={acc.blocked ? 'Да' : 'Нет'}
-                          onChange={() => {}}
-                          className="border rounded p-1 text-xs"
-                        >
-                          <option value="Да">Да</option>
-                          <option value="Нет">Нет</option>
-                        </select>
-                      </td>
+                      <td className="p-2">{acc.fio}</td><td className="p-2">{acc.position}</td><td className="p-2">{acc.division}</td><td className="p-2">{acc.department}</td>
+                      <td className="p-2"><select value={acc.blocked ? 'Да' : 'Нет'} onChange={() => {}} className="border rounded p-1 text-xs"><option value="Да">Да</option><option value="Нет">Нет</option></select></td>
                     </tr>
                   ))}
                 </tbody>
@@ -308,7 +261,6 @@ export default function IBIT() {
             </div>
           </div>
         );
-
       case 'attestation':
         return (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -318,27 +270,12 @@ export default function IBIT() {
                 <button onClick={() => setActiveCard(null)} className="text-gray-400 hover:text-gray-600">✕</button>
               </div>
               <table className="w-full text-sm">
-                <thead>
-                  <tr className="bg-gray-50">
-                    <th className="p-2 text-left">№ п/п</th>
-                    <th className="p-2 text-left">Аттестат соответствия</th>
-                    <th className="p-2 text-left">Номер помещения</th>
-                    <th className="p-2 text-left">Наименование объекта</th>
-                    <th className="p-2 text-left">Плановая переаттестация</th>
-                    <th className="p-2 text-left">Адрес</th>
-                    <th className="p-2 text-left">Тип доработок</th>
-                  </tr>
-                </thead>
+                <thead><tr className="bg-gray-50"><th className="p-2 text-left">№ п/п</th><th className="p-2 text-left">Аттестат соответствия</th><th className="p-2 text-left">Номер помещения</th><th className="p-2 text-left">Наименование объекта</th><th className="p-2 text-left">Плановая переаттестация</th><th className="p-2 text-left">Адрес</th><th className="p-2 text-left">Тип доработок</th></tr></thead>
                 <tbody>
                   {attestationPlan.map(row => (
                     <tr key={row.no} className="border-t">
-                      <td className="p-2">{row.no}</td>
-                      <td className="p-2">{row.certNumber}</td>
-                      <td className="p-2">{row.room}</td>
-                      <td className="p-2">{row.objectName}</td>
-                      <td className="p-2">{row.planDate}</td>
-                      <td className="p-2">{row.address}</td>
-                      <td className="p-2">{row.workType}</td>
+                      <td className="p-2">{row.no}</td><td className="p-2">{row.certNumber}</td><td className="p-2">{row.room}</td><td className="p-2">{row.objectName}</td>
+                      <td className="p-2">{row.planDate}</td><td className="p-2">{row.address}</td><td className="p-2">{row.workType}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -346,7 +283,6 @@ export default function IBIT() {
             </div>
           </div>
         );
-
       case 'oitReport':
         return (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -355,15 +291,10 @@ export default function IBIT() {
                 <h3 className="text-lg font-semibold">Отчет о работе ОИТ</h3>
                 <button onClick={() => setActiveCard(null)} className="text-gray-400 hover:text-gray-600">✕</button>
               </div>
-              <button
-                onClick={() => setShowOitForm(!showOitForm)}
-                className="mb-4 bg-brand-500 text-white px-4 py-2 rounded-lg hover:bg-brand-600 text-sm"
-              >
+              <button onClick={() => setShowOitForm(!showOitForm)} className="mb-4 bg-brand-500 text-white px-4 py-2 rounded-lg hover:bg-brand-600 text-sm">
                 {showOitForm ? 'Закрыть форму' : '+ Добавить задачу'}
               </button>
-              {showOitForm && (
-                <OitTaskForm employees={employees} topics={taskTopics} onAdd={addOitTask} />
-              )}
+              {showOitForm && <OitTaskForm employees={employees} topics={taskTopics} onAdd={addOitTask} />}
               {oitTodayTasks.length > 0 && (
                 <div className="mt-4">
                   <h4 className="font-medium mb-2">Распределение задач сегодня</h4>
@@ -382,15 +313,7 @@ export default function IBIT() {
               <div className="mt-4">
                 <h4 className="font-medium mb-2">Последние задачи</h4>
                 <table className="w-full text-sm">
-                  <thead>
-                    <tr className="bg-gray-50">
-                      <th className="p-2 text-left">Сотрудник</th>
-                      <th className="p-2 text-left">Тема</th>
-                      <th className="p-2 text-left">Описание</th>
-                      <th className="p-2 text-left">Часы</th>
-                      <th className="p-2 text-left">Дата</th>
-                    </tr>
-                  </thead>
+                  <thead><tr className="bg-gray-50"><th className="p-2 text-left">Сотрудник</th><th className="p-2 text-left">Тема</th><th className="p-2 text-left">Описание</th><th className="p-2 text-left">Часы</th><th className="p-2 text-left">Дата</th></tr></thead>
                   <tbody>
                     {oitTasks.slice(0, 10).map(task => (
                       <tr key={task.id} className="border-t">
@@ -407,7 +330,6 @@ export default function IBIT() {
             </div>
           </div>
         );
-
       case 'antivirus':
         return (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -417,19 +339,11 @@ export default function IBIT() {
                 <button onClick={() => setActiveCard(null)} className="text-gray-400 hover:text-gray-600">✕</button>
               </div>
               <table className="w-full text-sm">
-                <thead>
-                  <tr className="bg-gray-50">
-                    <th className="p-2 text-left">Сотрудник</th>
-                    <th className="p-2 text-left">Обновлены базы</th>
-                    <th className="p-2 text-left">Последнее обновление</th>
-                  </tr>
-                </thead>
+                <thead><tr className="bg-gray-50"><th className="p-2 text-left">Сотрудник</th><th className="p-2 text-left">Обновлены базы</th><th className="p-2 text-left">Последнее обновление</th></tr></thead>
                 <tbody>
                   {avStatusData.map((av, idx) => (
                     <tr key={idx} className="border-t">
-                      <td className="p-2">{av.fio}</td>
-                      <td className="p-2">{av.updated ? 'Да' : 'Нет'}</td>
-                      <td className="p-2">{av.lastUpdate}</td>
+                      <td className="p-2">{av.fio}</td><td className="p-2">{av.updated ? 'Да' : 'Нет'}</td><td className="p-2">{av.lastUpdate}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -437,7 +351,6 @@ export default function IBIT() {
             </div>
           </div>
         );
-
       case 'backup':
         return (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -447,25 +360,16 @@ export default function IBIT() {
                 <button onClick={() => setActiveCard(null)} className="text-gray-400 hover:text-gray-600">✕</button>
               </div>
               <table className="w-full text-sm">
-                <thead>
-                  <tr className="bg-gray-50">
-                    <th className="p-2 text-left">Дата</th>
-                    <th className="p-2 text-left">Статус</th>
-                  </tr>
-                </thead>
+                <thead><tr className="bg-gray-50"><th className="p-2 text-left">Дата</th><th className="p-2 text-left">Статус</th></tr></thead>
                 <tbody>
                   {backupData.map((b, idx) => (
-                    <tr key={idx} className="border-t">
-                      <td className="p-2">{b.date}</td>
-                      <td className="p-2">{b.status}</td>
-                    </tr>
+                    <tr key={idx} className="border-t"><td className="p-2">{b.date}</td><td className="p-2">{b.status}</td></tr>
                   ))}
                 </tbody>
               </table>
             </div>
           </div>
         );
-
       case 'incidents':
         return (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -475,21 +379,11 @@ export default function IBIT() {
                 <button onClick={() => setActiveCard(null)} className="text-gray-400 hover:text-gray-600">✕</button>
               </div>
               <table className="w-full text-sm">
-                <thead>
-                  <tr className="bg-gray-50">
-                    <th className="p-2 text-left">Дата</th>
-                    <th className="p-2 text-left">Описание</th>
-                    <th className="p-2 text-left">Статус</th>
-                    <th className="p-2 text-left">Время закрытия (ч)</th>
-                  </tr>
-                </thead>
+                <thead><tr className="bg-gray-50"><th className="p-2 text-left">Дата</th><th className="p-2 text-left">Описание</th><th className="p-2 text-left">Статус</th><th className="p-2 text-left">Время закрытия (ч)</th></tr></thead>
                 <tbody>
                   {incidentsData.map(inc => (
                     <tr key={inc.id} className="border-t">
-                      <td className="p-2">{inc.date}</td>
-                      <td className="p-2">{inc.description}</td>
-                      <td className="p-2">{inc.status}</td>
-                      <td className="p-2">{inc.timeToClose ?? '—'}</td>
+                      <td className="p-2">{inc.date}</td><td className="p-2">{inc.description}</td><td className="p-2">{inc.status}</td><td className="p-2">{inc.timeToClose ?? '—'}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -497,9 +391,7 @@ export default function IBIT() {
             </div>
           </div>
         );
-
-      default:
-        return null;
+      default: return null;
     }
   };
 
@@ -514,10 +406,8 @@ export default function IBIT() {
               onClick={() => setActiveCard(card.key)}
               className={`metric-card p-4 rounded-xl cursor-pointer hover:shadow-md transition-shadow ${statusClasses[status]} relative h-48 flex flex-col`}
             >
-              <div className="absolute top-2 right-2 flex gap-1 flex-wrap">
-                {card.indicators}
-              </div>
-              <h3 className="text-base font-semibold text-gray-800 mb-2 mt-6">{card.title}</h3>
+              {card.indicators}
+              <h3 className="text-base font-semibold text-gray-800 mb-2 pr-16">{card.title}</h3>
               <p className="text-xs text-gray-500 flex-1">{card.content}</p>
             </div>
           );
@@ -528,7 +418,7 @@ export default function IBIT() {
   );
 }
 
-// Компонент формы добавления задачи ОИТ
+// Форма добавления задачи ОИТ
 function OitTaskForm({ employees, topics, onAdd }) {
   const [employeeId, setEmployeeId] = useState('');
   const [topic, setTopic] = useState(topics[0]);
