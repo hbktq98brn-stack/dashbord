@@ -9,6 +9,7 @@ import GisInfra from './components/GisInfra';
 import StatsAnalytics from './components/StatsAnalytics';
 import Finance from './components/Finance';
 import { useLog } from './hooks/useLog';
+import NormativeDocs from './components/NormativeDocs';
 
 function AppContent() {
   const { user, logout } = useAuth();
