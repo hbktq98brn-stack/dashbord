@@ -197,7 +197,7 @@ ${reportText}
           onClick={openAiModal}
           className="text-sm bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700"
         >
-          🧠 Сформировать отчет
+          Сформировать отчет
         </button>
         <span className="text-xs text-gray-400">требуется ключ OpenRouter</span>
       </div>
