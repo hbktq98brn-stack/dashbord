@@ -106,12 +106,56 @@ const projectsData = [
       { no: 3, name: 'Утверждение методики расчёта показателей', planDate: '01.09.2026', status: 'Не начато', comment: '' }
     ],
     type: 'default'
+  },
+  // ---------- НОВЫЙ ПРОЕКТ ----------
+  {
+    id: 8,
+    title: 'Оптимизация процессов',
+    type: 'optimization',
+    controlPoints: { total: 11, done: 0, risk: 0, overdue: 0 },
+    subprojects: [
+      {
+        id: '1',
+        name: 'Самостоятельное формирование интерактивного отчета по исполнительской дисциплине',
+        unit: 'ед',
+        plan: 163200,
+        fact: null,
+        planDate: '21.12.2026',
+        factDate: null,
+        responsible: 'Никифоров Н. В.',
+        status: 'В работе',
+        udPlan: null,
+        udProject: '0%',
+        roadmap: [
+          { no: '1.1', name: 'Ручной ввод данных/клики', unit: 'ручной ввод - клики', plan: 163200, fact: null, planDate: '21.12.2026', factDate: null, responsible: 'Никифоров Н. В.', status: 'В работе', udPlan: null, udProject: '0%' },
+          { no: '1.2', name: 'Исполнение проекта', unit: 'усл. ед', plan: 3, fact: null, planDate: '21.12.2026', factDate: null, responsible: 'Никифоров Н. В.', status: 'В работе', udPlan: null, udProject: '0%',
+            children: [
+              { no: '1.2.1', name: 'Заключение контракта на обновление системы', unit: 'усл. ед', plan: 1, fact: null, planDate: '30.06.2026', factDate: null, responsible: 'Никифоров Н. В.', status: 'В работе', udPlan: null, udProject: '0%' },
+              { no: '1.2.2', name: 'Внедрение функции выгрузки отчета по исполнительской дисциплине', unit: 'усл. ед', plan: 1, fact: null, planDate: '30.09.2026', factDate: null, responsible: 'Никифоров Н. В.', status: 'В работе', udPlan: null, udProject: '0%' },
+              { no: '1.2.3', name: 'Направление куратору проекта служебной записки о завершении проекта', unit: 'усл. ед', plan: 1, fact: null, planDate: '21.12.2026', factDate: null, responsible: 'Никифоров Н. В.', status: 'В работе', udPlan: null, udProject: '0%' }
+            ]
+          }
+        ]
+      },
+      { id: '2', name: 'Самостоятельное предоставление сведений субъектами РФ в сфере культуры в АИС «Статистика»', unit: 'ед', plan: 500, fact: null, planDate: '01.12.2026', factDate: null, responsible: 'Егорова П. Г.', status: 'В работе', udPlan: null, udProject: '0%', roadmap: [] },
+      { id: '3', name: 'Сокращение количества согласований в документах по основным видам деятельности', unit: 'ед', plan: 25, fact: null, planDate: '31.12.2026', factDate: null, responsible: 'Кондратьев Д. И.', status: 'В работе', udPlan: null, udProject: '0%', roadmap: [] },
+      { id: '4', name: 'Составление типовых ответов на массовые обращения граждан', unit: 'ед', plan: 40, fact: null, planDate: '15.11.2026', factDate: null, responsible: 'Макушин А. Ю.', status: 'В работе', udPlan: null, udProject: '0%', roadmap: [] },
+      { id: '5', name: 'Предзаполнение регистрационных карточек типовых входящих обращений граждан', unit: 'ед', plan: 1000, fact: null, planDate: '01.10.2026', factDate: null, responsible: 'Илюхина А. С.', status: 'В работе', udPlan: null, udProject: '0%', roadmap: [] },
+      { id: '6', name: 'Реализация заявки в отдел административно-хозяйственного обеспечения через внутренний портал', unit: 'ед', plan: 1, fact: null, planDate: '30.09.2026', factDate: null, responsible: 'Крайнов В. С.', status: 'В работе', udPlan: null, udProject: '0%', roadmap: [] },
+      { id: '7', name: 'Онлайн бронирование переговорных комнат через внутренний портал', unit: 'ед', plan: 1, fact: null, planDate: '30.06.2026', factDate: null, responsible: 'Леднев И. Ю.', status: 'В работе', udPlan: null, udProject: '0%', roadmap: [] },
+      { id: '8', name: 'Сокращение отчетности', unit: 'ед', plan: 50, fact: null, planDate: '31.12.2026', factDate: null, responsible: 'Полякова Е. М.', status: 'В работе', udPlan: null, udProject: '0%', roadmap: [] },
+      { id: '9', name: 'Создание шаблона подписанта в системе электронного документооборота', unit: 'ед', plan: 1, fact: null, planDate: '30.09.2026', factDate: null, responsible: 'Серебрякова У. О.', status: 'В работе', udPlan: null, udProject: '0%', roadmap: [] },
+      { id: '10', name: 'Автоматическое создание списка рассылки в качестве приложения к документу', unit: 'ед', plan: 1, fact: null, planDate: '30.06.2026', factDate: null, responsible: 'Волков А. В.', status: 'В работе', udPlan: null, udProject: '0%', roadmap: [] },
+      { id: '11', name: 'Создание типовых отчетов для закрытия документов в СЭД', unit: 'ед', plan: 1, fact: null, planDate: '30.09.2026', factDate: null, responsible: 'Морозов А. А.', status: 'В работе', udPlan: null, udProject: '0%', roadmap: [] }
+    ]
   }
 ];
 
+// Статусы КТ и регионов
 const ktStatuses = ['Не начато', 'В работе', 'Под риском', 'Просрочено', 'Выполнено'];
 const regionStatuses = ['Не начато', 'Внедряется', 'Риски', 'Внедрено'];
 
+// Пересчёт controlPoints
 const recalcControlPoints = (roadmap) => {
   const total = roadmap.length;
   const done = roadmap.filter(r => r.status === 'Выполнено').length;
@@ -120,6 +164,7 @@ const recalcControlPoints = (roadmap) => {
   return { total, done, risk, overdue };
 };
 
+// Определение статуса проекта
 const getProjectStatus = (project) => {
   if (project.type === 'digital_id') {
     const current = 100000;
@@ -128,6 +173,12 @@ const getProjectStatus = (project) => {
     if (progress >= 1) return 'green';
     if (progress >= 0.5) return 'yellow';
     return 'red';
+  }
+  if (project.type === 'optimization') {
+    const allPoints = project.subprojects.flatMap(sp => sp.roadmap || []);
+    if (allPoints.some(p => p.status === 'Просрочено')) return 'red';
+    if (allPoints.every(p => p.status === 'Выполнено')) return 'green';
+    return 'yellow';
   }
   const { done, total, risk, overdue } = project.controlPoints;
   if (overdue > 0) return 'red';
@@ -144,6 +195,7 @@ export default function Projects() {
   const [reportText, setReportText] = useState('');
   const [pendingRequests, setPendingRequests] = useState([]);
   const [showApprovalModal, setShowApprovalModal] = useState(false);
+  const [selectedSubProject, setSelectedSubProject] = useState(null);
 
   const handleSetResponsible = (projectId, employeeId) => {
     setProjects(prev => prev.map(p => p.id === projectId ? { ...p, responsible: employeeId || null } : p));
@@ -153,7 +205,6 @@ export default function Projects() {
     setSelectedProject(project);
   };
 
-  // Запрос на изменение статуса КТ (только создаёт запрос)
   const handleKtStatusChangeRequest = (projectId, ktNo, newStatus, oldStatus) => {
     const project = projects.find(p => p.id === projectId);
     setPendingRequests(prev => [...prev, {
@@ -168,7 +219,6 @@ export default function Projects() {
     }]);
   };
 
-  // Запрос на изменение статуса региона
   const handleRegionStatusChangeRequest = (projectId, regionIndex, newStatus, oldStatus) => {
     const project = projects.find(p => p.id === projectId);
     const regionName = project.digitalIdData.regions[regionIndex].name;
@@ -185,7 +235,6 @@ export default function Projects() {
     }]);
   };
 
-  // Одобрение запроса (только руководителем)
   const approveRequest = (requestId) => {
     const request = pendingRequests.find(r => r.id === requestId);
     if (!request) return;
@@ -205,7 +254,6 @@ export default function Projects() {
       return p;
     }));
     setPendingRequests(prev => prev.filter(r => r.id !== requestId));
-    // Также обновляем выбранный проект, если открыт
     setSelectedProject(prev => {
       if (!prev || prev.id !== request.projectId) return prev;
       if (request.type === 'kt') {
@@ -223,7 +271,6 @@ export default function Projects() {
     });
   };
 
-  // Отклонение запроса
   const rejectRequest = (requestId) => {
     setPendingRequests(prev => prev.filter(r => r.id !== requestId));
   };
@@ -265,7 +312,6 @@ export default function Projects() {
     red: 'status-red bg-red-50 animate-pulse'
   };
 
-  // Проверка, есть ли ожидающий запрос для данной КТ или региона
   const hasPendingKt = (projectId, ktNo) =>
     pendingRequests.some(r => r.projectId === projectId && r.type === 'kt' && r.ktNo === ktNo);
   const hasPendingRegion = (projectId, regionIndex) =>
@@ -302,12 +348,18 @@ export default function Projects() {
               onClick={() => handleProjectClick(project)}
               className={`metric-card p-4 rounded-xl cursor-pointer hover:shadow-md transition-shadow ${statusClasses[status]} relative h-48 flex flex-col`}
             >
-              {project.type !== 'digital_id' && (
+              {project.type !== 'digital_id' && project.type !== 'optimization' && (
                 <div className="absolute top-2 right-2 flex gap-1 text-xs">
                   <span title="Всего" className="text-gray-500">Σ{total}</span>
                   <span title="Выполнено" className="text-green-600">✓{done}</span>
                   <span title="Под риском" className="text-yellow-600">⚠{risk}</span>
                   <span title="Просрочено" className="text-red-600">✗{overdue}</span>
+                </div>
+              )}
+              {project.type === 'optimization' && (
+                <div className="absolute top-2 right-2 flex gap-1 text-xs">
+                  <span title="Всего подпроектов" className="text-gray-500">Σ{project.subprojects.length}</span>
+                  <span title="Выполнено" className="text-green-600">✓{project.controlPoints.done}</span>
                 </div>
               )}
 
@@ -321,7 +373,15 @@ export default function Projects() {
                 </div>
               )}
 
-              {project.type !== 'digital_id' && <div className="flex-1" />}
+              {project.type === 'optimization' && (
+                <div className="text-xs text-gray-500 mb-2 flex-1">
+                  Подпроектов: {project.subprojects.length}
+                  <br />
+                  Все в работе
+                </div>
+              )}
+
+              {project.type !== 'digital_id' && project.type !== 'optimization' && <div className="flex-1" />}
 
               <div onClick={e => e.stopPropagation()} className="mt-auto">
                 <label className="text-xs text-gray-500 block mb-1">Ответственный:</label>
@@ -344,8 +404,8 @@ export default function Projects() {
         })}
       </div>
 
-      {/* Модальное окно дорожной карты (кроме digital_id) */}
-      {selectedProject && selectedProject.type !== 'digital_id' && (
+      {/* Модальное окно дорожной карты (кроме digital_id и optimization) */}
+      {selectedProject && selectedProject.type !== 'digital_id' && selectedProject.type !== 'optimization' && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl p-6 max-w-3xl w-full max-h-[80vh] overflow-auto shadow-lg">
             <div className="flex justify-between items-center mb-4">
@@ -487,6 +547,122 @@ export default function Projects() {
                 </div>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Модальное окно для "Оптимизация процессов" */}
+      {selectedProject && selectedProject.type === 'optimization' && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 max-w-5xl w-full max-h-[90vh] overflow-auto shadow-lg">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold">Оптимизация процессов – Подпроекты</h3>
+              <button onClick={() => { setSelectedProject(null); setSelectedSubProject(null); }} className="text-gray-400 hover:text-gray-600">✕</button>
+            </div>
+            <div className="space-y-2">
+              {selectedProject.subprojects.map(sp => (
+                <div key={sp.id} className="border rounded p-3 flex items-center justify-between hover:bg-gray-50">
+                  <div className="flex-1">
+                    <p className="font-medium text-sm">{sp.id}. {sp.name}</p>
+                    <p className="text-xs text-gray-500">План: {sp.plan} {sp.unit} | Дата: {sp.planDate} | Ответственный: {sp.responsible}</p>
+                  </div>
+                  <button
+                    onClick={() => setSelectedSubProject(sp)}
+                    className="ml-4 text-brand-500 text-sm hover:underline"
+                  >
+                    Дорожная карта
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Модальное окно дорожной карты для подпроекта */}
+      {selectedSubProject && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 max-w-5xl w-full max-h-[90vh] overflow-auto shadow-lg">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold">{selectedSubProject.name} – Дорожная карта</h3>
+              <button onClick={() => setSelectedSubProject(null)} className="text-gray-400 hover:text-gray-600">✕</button>
+            </div>
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-gray-50">
+                  <th className="p-2 text-left">№</th>
+                  <th className="p-2 text-left">Наименование, ед.изм.</th>
+                  <th className="p-2 text-right">План</th>
+                  <th className="p-2 text-right">Факт</th>
+                  <th className="p-2 text-left">Плановая дата</th>
+                  <th className="p-2 text-left">Фактическая дата</th>
+                  <th className="p-2 text-left">Ответственный</th>
+                  <th className="p-2 text-left">Статус</th>
+                  <th className="p-2 text-right">УД (план)</th>
+                  <th className="p-2 text-right">УД (проект)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {selectedSubProject.roadmap && selectedSubProject.roadmap.length > 0 ? (
+                  selectedSubProject.roadmap.map(point => (
+                    <React.Fragment key={point.no}>
+                      <tr className="border-t">
+                        <td className="p-2">{point.no}</td>
+                        <td className="p-2">{point.name}, {point.unit}</td>
+                        <td className="p-2 text-right">{point.plan}</td>
+                        <td className="p-2 text-right">{point.fact ?? '-'}</td>
+                        <td className="p-2">{point.planDate}</td>
+                        <td className="p-2">{point.factDate ?? '-'}</td>
+                        <td className="p-2">{point.responsible}</td>
+                        <td className="p-2">
+                          <select
+                            value={point.status}
+                            onChange={e => {
+                              // Здесь можно добавить логику подтверждения
+                            }}
+                            className="text-xs border rounded p-1"
+                          >
+                            <option value="В работе">В работе</option>
+                            <option value="Выполнено">Выполнено</option>
+                            <option value="Просрочено">Просрочено</option>
+                          </select>
+                        </td>
+                        <td className="p-2 text-right">{point.udPlan ?? '-'}</td>
+                        <td className="p-2 text-right">{point.udProject}</td>
+                      </tr>
+                      {point.children && point.children.map(child => (
+                        <tr key={child.no} className="border-t bg-gray-50">
+                          <td className="p-2 pl-6">{child.no}</td>
+                          <td className="p-2 pl-6">{child.name}, {child.unit}</td>
+                          <td className="p-2 text-right">{child.plan}</td>
+                          <td className="p-2 text-right">{child.fact ?? '-'}</td>
+                          <td className="p-2">{child.planDate}</td>
+                          <td className="p-2">{child.factDate ?? '-'}</td>
+                          <td className="p-2">{child.responsible}</td>
+                          <td className="p-2">
+                            <select
+                              value={child.status}
+                              onChange={e => {}}
+                              className="text-xs border rounded p-1"
+                            >
+                              <option value="В работе">В работе</option>
+                              <option value="Выполнено">Выполнено</option>
+                              <option value="Просрочено">Просрочено</option>
+                            </select>
+                          </td>
+                          <td className="p-2 text-right">{child.udPlan ?? '-'}</td>
+                          <td className="p-2 text-right">{child.udProject}</td>
+                        </tr>
+                      ))}
+                    </React.Fragment>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={10} className="p-4 text-center text-gray-500">Дорожная карта отсутствует</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
       )}
