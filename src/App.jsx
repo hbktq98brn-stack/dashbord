@@ -4,8 +4,7 @@ import LoginModal from './components/LoginModal';
 import TabBar from './components/TabBar';
 import DocumentFlow from './components/DocumentFlow/DocumentFlow';
 import Projects from './components/Projects';
-import EDS from './components/EDS';
-import InfoSec from './components/InfoSec';
+import IBIT from './components/IBIT';
 import GisInfra from './components/GisInfra';
 import StatsAnalytics from './components/StatsAnalytics';
 import Finance from './components/Finance';
@@ -18,14 +17,12 @@ function AppContent() {
 
   const handleTabChange = (idx) => {
     setActiveTab(idx);
-    const tabNames = ['Документооборот', 'Проекты', 'ЭП/МЧД', 'ИБ', 'ГИС', 'Статистика', 'Финансы'];
+    const tabNames = ['Документооборот', 'Проекты', 'ИБ / ИТ', 'ГИС и ИТ-инфра', 'Статистика', 'Финансы и закупки'];
     addLog('Переход по вкладке', tabNames[idx]);
   };
 
   const handleLoginAs = () => {
-    // Откроется модальное окно при следующем обновлении, либо можно сделать logout и снова логин
     logout();
-    // перезагрузить, чтобы показать окно входа
     window.location.reload();
   };
 
@@ -33,11 +30,10 @@ function AppContent() {
     switch (activeTab) {
       case 0: return <DocumentFlow />;
       case 1: return <Projects />;
-      case 2: return <EDS />;
-      case 3: return <InfoSec />;
-      case 4: return <GisInfra />;
-      case 5: return <StatsAnalytics />;
-      case 6: return <Finance />;
+      case 2: return <IBIT />;
+      case 3: return <GisInfra />;
+      case 4: return <StatsAnalytics />;
+      case 5: return <Finance />;
       default: return null;
     }
   };
@@ -47,7 +43,7 @@ function AppContent() {
       <header className="flex items-center justify-between mb-2">
         <div>
           <h1 className="text-3xl font-light text-gray-800">Управленческий дашборд</h1>
-          <p className="text-gray-500">Департамент управления делами и цифровой трансформации</p>
+          <p className="text-gray-500">Департамент интеграции и контроля</p>
         </div>
         <div className="flex items-center gap-3">
           {user ? (
