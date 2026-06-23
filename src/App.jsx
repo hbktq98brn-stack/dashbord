@@ -5,7 +5,7 @@ import TabBar from './components/TabBar';
 import DocumentFlow from './components/DocumentFlow/DocumentFlow';
 import Projects from './components/Projects';
 import IBIT from './components/IBIT';
-import GisInfra from './components/GisInfra';
+import InformSystems from './components/InformSystems';
 import StatsAnalytics from './components/StatsAnalytics';
 import Finance from './components/Finance';
 import NormativeDocs from './components/NormativeDocs';
@@ -18,7 +18,7 @@ function AppContent() {
 
   const handleTabChange = (idx) => {
     setActiveTab(idx);
-    const tabNames = ['Документооборот', 'Проекты', 'ИБ / ИТ', 'ГИС и ИТ-инфра', 'Статистика', 'Финансы и закупки', 'Нормативные документы'];
+    const tabNames = ['Документооборот', 'Проекты', 'ИБ / ИТ', 'Информсистемы', 'Статистика', 'Финансы и закупки', 'Нормативные документы'];
     addLog('Переход по вкладке', tabNames[idx]);
   };
 
@@ -32,7 +32,7 @@ function AppContent() {
       case 0: return <DocumentFlow />;
       case 1: return <Projects />;
       case 2: return <IBIT />;
-      case 3: return <GisInfra />;
+      case 3: return <InformSystems />;      
       case 4: return <StatsAnalytics />;
       case 5: return <Finance />;
       case 6: return <NormativeDocs />;
