@@ -35,6 +35,7 @@ function AppContent() {
       case 3: return <GisInfra />;
       case 4: return <StatsAnalytics />;
       case 5: return <Finance />;
+      case 6: return <NormativeDocs />;
       default: return null;
     }
   };
