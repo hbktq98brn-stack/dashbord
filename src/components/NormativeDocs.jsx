@@ -9,14 +9,14 @@ const ukazy = [
   { id: 3, number: 'Указ Президента РФ от 09.05.2017 № 203', title: 'О Стратегии развития информационного общества в Российской Федерации на 2017-2030 годы' },
 ];
 
-// 2. Постановления Правительства РФ
+// 2. Постановления Правительства России
 const postanovleniya = [
   { id: 1, number: 'Постановление Правительства РФ от 10.10.2020 № 1646', title: 'Об утверждении Положения о федеральной государственной информационной системе "Единая информационная система управления кадровым составом государственной гражданской службы Российской Федерации"' },
   { id: 2, number: 'Постановление Правительства РФ от 24.05.2010 № 365', title: 'О координации мероприятий по использованию информационно-коммуникационных технологий в деятельности государственных органов' },
   { id: 3, number: 'Постановление Правительства РФ от 06.07.2015 № 676', title: 'О требованиях к порядку создания, развития, ввода в эксплуатацию, эксплуатации и вывода из эксплуатации государственных информационных систем' },
 ];
 
-// 3. Распоряжения Правительства РФ
+// 3. Распоряжения Правительства России
 const rasporyazheniya = [
   { id: 1, number: 'Распоряжение Правительства РФ от 22.10.2021 № 2998-р', title: 'Об утверждении стратегического направления в области цифровой трансформации государственного управления' },
   { id: 2, number: 'Распоряжение Правительства РФ от 28.07.2017 № 1632-р', title: 'Об утверждении программы "Цифровая экономика Российской Федерации"' },
@@ -44,7 +44,7 @@ const rasporyazheniyaMin = [
 ];
 const raspMinIndicator = { accepted: 5, inProgress: 4, onApproval: 2 }; // аналогічно
 
-// 6. Документы ПДТР (Проектно-директивные технические решения)
+// 6. Документы ПДТР (Противодействие техническим разведкам)
 const pdtrDocs = [
   { id: 1, number: 'ПДТР-2024-01', title: 'Требования к интеграции СЭД с порталом Госуслуг' },
   { id: 2, number: 'ПДТР-2024-02', title: 'Архитектура защищенной сети передачи данных Минкультуры' },
@@ -62,7 +62,7 @@ const fsteсDocs = [
   { id: 2, number: 'Приказ ФСТЭК России от 14.03.2014 № 21', title: 'Об утверждении состава и содержания организационных и технических мер по обеспечению безопасности персональных данных' },
 ];
 
-// 9. Инструкции
+// 9. Инструкции 
 const instructionsList = [
   { id: 1, title: 'Выдача/переоформление ЭЦП' },
   { id: 2, title: 'Оформление доступа в ЭБ' },
@@ -96,13 +96,13 @@ export default function NormativeDocs() {
     },
     {
       key: 'postanovleniya',
-      title: 'Постановления Правительства РФ',
+      title: 'Постановления Правительства России',
       indicators: <span className="text-xs text-gray-500">Документов: {postanovleniya.length}</span>,
       content: 'Правительственные постановления',
     },
     {
       key: 'rasporyazheniya',
-      title: 'Распоряжения Правительства РФ',
+      title: 'Распоряжения Правительства России',
       indicators: <span className="text-xs text-gray-500">Документов: {rasporyazheniya.length}</span>,
       content: 'Распоряжения Правительства',
     },
@@ -120,7 +120,7 @@ export default function NormativeDocs() {
     },
     {
       key: 'rasporyazheniyaMin',
-      title: 'Распоряжения Минкультуры РФ',
+      title: 'Распоряжения Минкультуры России',
       indicators: (
         <div className="flex gap-1 text-xs">
           <span className="text-green-600">✓{raspMinIndicator.accepted}</span>
@@ -134,19 +134,19 @@ export default function NormativeDocs() {
       key: 'pdtr',
       title: 'Документы ПДТР',
       indicators: <span className="text-xs text-gray-500">Документов: {pdtrDocs.length}</span>,
-      content: 'Проектно-директивные тех. решения',
+      content: 'Противодействие техническим разведкам',
     },
     {
       key: 'gusp',
       title: 'Документы ГУСП',
       indicators: <span className="text-xs text-gray-500">Документов: {guspDocs.length}</span>,
-      content: 'Главное управление спец. связи',
+      content: 'Главное управление специальной связи',
     },
     {
       key: 'fsteс',
       title: 'Документы ФСТЭК',
       indicators: <span className="text-xs text-gray-500">Документов: {fsteсDocs.length}</span>,
-      content: 'Федеральная служба по тех. и экспортному контролю',
+      content: 'Федеральная служба по техническому и экспортному контролю',
     },
     {
       key: 'instructions',
@@ -184,7 +184,7 @@ export default function NormativeDocs() {
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
             <div className="bg-white rounded-xl p-6 max-w-3xl w-full max-h-[80vh] overflow-auto">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold">Постановления Правительства РФ</h3>
+                <h3 className="text-lg font-semibold">Постановления Правительства России</h3>
                 <button onClick={() => setActiveCard(null)} className="text-gray-400 hover:text-gray-600">✕</button>
               </div>
               <ul className="space-y-2">
@@ -203,7 +203,7 @@ export default function NormativeDocs() {
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
             <div className="bg-white rounded-xl p-6 max-w-3xl w-full max-h-[80vh] overflow-auto">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold">Распоряжения Правительства РФ</h3>
+                <h3 className="text-lg font-semibold">Распоряжения Правительства России</h3>
                 <button onClick={() => setActiveCard(null)} className="text-gray-400 hover:text-gray-600">✕</button>
               </div>
               <ul className="space-y-2">
@@ -241,7 +241,7 @@ export default function NormativeDocs() {
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
             <div className="bg-white rounded-xl p-6 max-w-3xl w-full max-h-[80vh] overflow-auto">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold">Распоряжения Минкультуры РФ</h3>
+                <h3 className="text-lg font-semibold">Распоряжения Минкультуры России</h3>
                 <button onClick={() => setActiveCard(null)} className="text-gray-400 hover:text-gray-600">✕</button>
               </div>
               <ul className="space-y-2">
