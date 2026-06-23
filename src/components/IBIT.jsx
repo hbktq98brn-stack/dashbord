@@ -123,6 +123,31 @@ export default function IBIT() {
     setOitTasks(prev => [task, ...prev]);
   };
 
+  // Определение статуса карточки (для цветовой полосы)
+  const getCardStatus = (key) => {
+    switch (key) {
+      case 'ecp':
+        if (ecpOverdue > 0) return 'red';
+        if (ecpExpiring7d > 0) return 'yellow';
+        return 'green';
+      case 'accounts':
+        if (accountsBlocked > 0) return 'yellow';
+        return 'green';
+      case 'attestation':
+        return 'yellow'; // плановая работа
+      case 'oitReport':
+        return oitTodayTasks.length > 0 ? 'green' : 'yellow';
+      case 'antivirus':
+        return avUpdated === avTotal ? 'green' : 'yellow';
+      case 'backup':
+        return lastBackup.status === 'Успешно' ? 'green' : 'red';
+      case 'incidents':
+        if (openIncidents > 0) return 'red';
+        return 'green';
+      default: return 'green';
+    }
+  };
+
   // Карточки
   const cards = [
     {
@@ -130,9 +155,9 @@ export default function IBIT() {
       title: 'ЭЦП',
       indicators: (
         <div className="flex gap-1 flex-wrap">
-          <span className="badge bg-gray-100 text-gray-700">Σ{ecpTotal}</span>
-          {ecpExpiring7d > 0 && <span className="badge bg-yellow-100 text-yellow-800">⏳{ecpExpiring7d}</span>}
-          {ecpOverdue > 0 && <span className="badge bg-red-100 text-red-800">✗{ecpOverdue}</span>}
+          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700">Σ{ecpTotal}</span>
+          {ecpExpiring7d > 0 && <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">⏳{ecpExpiring7d}</span>}
+          {ecpOverdue > 0 && <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">✗{ecpOverdue}</span>}
         </div>
       ),
       content: 'Сертификаты ЭЦП',
@@ -142,8 +167,8 @@ export default function IBIT() {
       title: 'Учетные записи',
       indicators: (
         <div className="flex gap-1">
-          <span className="badge bg-gray-100 text-gray-700">Σ{accountsTotal}</span>
-          <span className="badge bg-red-100 text-red-800">🚫{accountsBlocked}</span>
+          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700">Σ{accountsTotal}</span>
+          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">🚫{accountsBlocked}</span>
         </div>
       ),
       content: 'Управление доступом',
@@ -151,25 +176,25 @@ export default function IBIT() {
     {
       key: 'attestation',
       title: 'План переаттестации',
-      indicators: <span className="badge bg-gray-100 text-gray-700">Всего: {attestationTotal}</span>,
+      indicators: <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700">Всего: {attestationTotal}</span>,
       content: 'Аттестация объектов',
     },
     {
       key: 'oitReport',
       title: 'Отчет о работе ОИТ',
-      indicators: <span className="badge bg-blue-100 text-blue-800">Сегодня: {oitTodayTasks.length}</span>,
+      indicators: <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">Сегодня: {oitTodayTasks.length}</span>,
       content: 'Задачи сотрудников',
     },
     {
       key: 'antivirus',
       title: 'Антивирусная защита',
-      indicators: <span className="badge bg-green-100 text-green-800">Обновлено {avUpdated}/{avTotal}</span>,
+      indicators: <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Обновлено {avUpdated}/{avTotal}</span>,
       content: 'Статус обновлений',
     },
     {
       key: 'backup',
       title: 'Резервное копирование',
-      indicators: <span className={`badge ${lastBackup.status === 'Успешно' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>Последнее: {lastBackup.status}</span>,
+      indicators: <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${lastBackup.status === 'Успешно' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>Последнее: {lastBackup.status}</span>,
       content: 'Статус бэкапов',
     },
     {
@@ -177,15 +202,22 @@ export default function IBIT() {
       title: 'Инциденты ИБ',
       indicators: (
         <div className="flex gap-1">
-          <span className="badge bg-gray-100 text-gray-700">Σ{totalIncidents}</span>
-          {openIncidents > 0 && <span className="badge bg-red-100 text-red-800">Открыто {openIncidents}</span>}
+          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700">Σ{totalIncidents}</span>
+          {openIncidents > 0 && <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Открыто {openIncidents}</span>}
         </div>
       ),
       content: 'Управление инцидентами',
     },
   ];
 
-  // Рендер модального окна
+  // Классы для статуса
+  const statusClasses = {
+    green: 'status-green bg-green-50',
+    yellow: 'status-yellow bg-yellow-50',
+    red: 'status-red bg-red-50 animate-pulse'
+  };
+
+  // Рендер модального окна (без изменений, только вызов setActiveCard)
   const renderModal = () => {
     if (!activeCard) return null;
     switch (activeCard) {
@@ -474,19 +506,22 @@ export default function IBIT() {
   return (
     <div>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {cards.map(card => (
-          <div
-            key={card.key}
-            onClick={() => setActiveCard(card.key)}
-            className="metric-card p-4 rounded-xl cursor-pointer hover:shadow-md transition-shadow bg-white border border-gray-100 relative h-48 flex flex-col"
-          >
-            <div className="absolute top-2 right-2 flex gap-1 flex-wrap">
-              {card.indicators}
+        {cards.map(card => {
+          const status = getCardStatus(card.key);
+          return (
+            <div
+              key={card.key}
+              onClick={() => setActiveCard(card.key)}
+              className={`metric-card p-4 rounded-xl cursor-pointer hover:shadow-md transition-shadow ${statusClasses[status]} relative h-48 flex flex-col`}
+            >
+              <div className="absolute top-2 right-2 flex gap-1 flex-wrap">
+                {card.indicators}
+              </div>
+              <h3 className="text-base font-semibold text-gray-800 mb-2 mt-6">{card.title}</h3>
+              <p className="text-xs text-gray-500 flex-1">{card.content}</p>
             </div>
-            <h3 className="text-base font-semibold text-gray-800 mb-2 mt-6">{card.title}</h3>
-            <p className="text-xs text-gray-500 flex-1">{card.content}</p>
-          </div>
-        ))}
+          );
+        })}
       </div>
       {renderModal()}
     </div>
