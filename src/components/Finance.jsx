@@ -168,15 +168,10 @@ const docApproval = bigPurchases.map(p => ({
 }));
 
 // 6. Нарушения 44-ФЗ (пример)
-const violations = [
-  { event: 'Закупка №2 (Ассистент)', violation: 'Нарушение сроков публикации', fine: 'Предупреждение' },
-  { event: 'План-график 2026', violation: 'Несвоевременное внесение изменений', fine: 'Штраф 5000 руб.' }
-];
+const violations = [];
 
 // 7. Просрочка поставки
-const overdueSupply = [
-  { event: 'Поставка серверного оборудования', overdueDays: 5, measures: 'Выставлена претензия' }
-];
+const overdueSupply = [];
 
 // 8. Внесение изменений в план-график
 const planChanges = [
