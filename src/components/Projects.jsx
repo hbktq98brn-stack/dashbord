@@ -861,9 +861,14 @@ export default function Projects() {
         })}
       </div>
 
-      {/* Модальное окно дорожной карты (кроме digital_id и optimization) */}
-      {selectedProject && selectedProject.type !== 'digital_id' && selectedProject.type !== 'optimization' && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      {/* Показатели ВПЦТ – отдельное окно */}
+{selectedProject && selectedProject.id === 7 && (
+  <VpctModal onClose={() => setSelectedProject(null)} />
+)}
+
+{/* Модальное окно дорожной карты (кроме digital_id и optimization) */}
+{selectedProject && selectedProject.id !== 7 && selectedProject.type !== 'digital_id' && selectedProject.type !== 'optimization' && (        
+  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl p-6 max-w-3xl w-full max-h-[80vh] overflow-auto shadow-lg">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold">{selectedProject.title} – Дорожная карта</h3>
