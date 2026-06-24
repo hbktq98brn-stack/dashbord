@@ -230,6 +230,419 @@ const getProjectStatus = (project) => {
   if (done === total) return 'green';
   return 'yellow';
 };
+// Компонент модального окна для проекта "Показатели ВПЦТ"
+const VpctModal = ({ onClose }) => {
+  const [activeTab, setActiveTab] = useState(0);
+
+  const tabs = [
+    'Мероприятия программы',
+    'ОКР и эффекты',
+    'Сводные результаты',
+    'Сводные эффекты',
+    'Финансирование',
+    'Технологическая зрелость'
+  ];
+
+  // ---------- МОК-ДАННЫЕ ----------
+  // ... (вставлю все данные из предыдущих сообщений)
+
+  // Мероприятия программы (пример)
+  const programEvents = [
+    { id: 1, name: 'Разработка и внедрение сервиса "Отслеживание расписаний занятий"', startDate: '01.03.2026', endDate: '30.09.2026', responsible: 'Кондратьев Д. И.', status: 'В работе', planIndicator: 1, factIndicator: 0, percent: 0 },
+    { id: 2, name: 'Рефакторинг услуги "Запись на программу дополнительного образования"', startDate: '01.04.2026', endDate: '31.12.2026', responsible: 'Илюхина А. С.', status: 'В работе', planIndicator: 1, factIndicator: 0, percent: 0 },
+    { id: 3, name: 'Разработка проактивных уведомлений для услуг', startDate: '01.07.2026', endDate: '30.06.2027', responsible: 'Прохоров А. П.', status: 'Не начато', planIndicator: 0, factIndicator: 0, percent: 0 }
+  ];
+
+  // ОКР и эффекты (пример)
+  const okrData = [
+    { name: 'Цифровая зрелость', goals: [
+      { name: 'Уровень удовлетворенности граждан качеством предоставления госуслуг', plan: 4.5, fact: 4.3, unit: 'балла' },
+      { name: 'Доля госуслуг, предоставляемых в электронном виде', plan: 95, fact: 85, unit: '%' }
+    ]},
+    { name: 'Эффективность госуправления', goals: [
+      { name: 'Сокращение времени предоставления услуг', plan: 30, fact: 28, unit: '%' },
+      { name: 'Снижение издержек на получение госуслуг', plan: 10, fact: 8, unit: '%' }
+    ]}
+  ];
+
+  // Сводные результаты (пример для госуслуг)
+  const summaryResults = {
+    newServices: { plan2025_2027: 4, fact2025_2027: 4, plan2026_2028: 0, fact2026_2028: 0, okr: 4 },
+    refactoring: { plan2025_2027: 1, fact2025_2027: 1, plan2026_2028: 6, fact2026_2028: 0, okr: 4 },
+    online: { plan2025_2027: 1, fact2025_2027: 1, plan2026_2028: 1, fact2026_2028: 0, okr: 1 },
+    proactive: { plan2025_2027: 0, fact2025_2027: 0, plan2026_2028: 0, fact2026_2028: 0, okr: 0 },
+    notifications: { plan2025_2027: 0, fact2025_2027: 0, plan2026_2028: 0, fact2026_2028: 0, okr: 0 },
+    techSolutions: { plan2025_2027: 0, fact2025_2027: 0, plan2026_2028: 5, fact2026_2028: 0, okr: 5 }
+  };
+
+  // Детализация рефакторинга (пример)
+  const refactoringDetails = [
+    { id: '1.2.1', name: 'Запись на программу дополнительного образования', csi: 0, applications: 0, rejections: 0, positive: 0, errors: 0, drafts: 0, avgTime: 0, noVisit: 'Нет', epgu: 'Нет', lir: 'Нет', vitrina: 'Нет', plan2026: true },
+    { id: '1.2.2', name: 'Предоставление сведений о наличии объектов культурного наследия', csi: 0, applications: 0, rejections: 0, positive: 0, errors: 0, drafts: 0, avgTime: 0, noVisit: 'Нет', epgu: 'Нет', lir: 'Нет', vitrina: 'Нет', plan2026: true },
+    { id: '1.2.3', name: 'Выдача разрешения на передачу музейных предметов', csi: null, applications: null, rejections: null, positive: null, errors: null, drafts: null, avgTime: null, noVisit: 'Нет', epgu: 'Нет', lir: 'Нет', vitrina: 'Нет', plan2026: false },
+    { id: '1.2.4', name: 'Получение разрешения на проведение работ по сохранению объекта культурного наследия', csi: 5.0, applications: 339, rejections: 9.4, positive: 38.9, errors: 0, drafts: 26.2, avgTime: 906595.0, noVisit: 'Да', epgu: 'Да', lir: 'Да', vitrina: 'Нет', plan2026: false },
+    { id: '1.2.5', name: 'Получение разрешения (открытого листа) на проведение археологических работ', csi: 4.9, applications: 6956, rejections: 20.5, positive: 62.3, errors: 0.3, drafts: 31.4, avgTime: 1310083.0, noVisit: 'Да', epgu: 'Да', lir: 'Да', vitrina: 'Нет', plan2026: false },
+    { id: '1.2.6', name: 'Согласование проектной документации на проведение работ по сохранению ОКН', csi: 5.0, applications: 120, rejections: 16.7, positive: 14.2, errors: 0, drafts: 5.2, avgTime: 2214086.0, noVisit: 'Да', epgu: 'Да', lir: 'Да', vitrina: 'Нет', plan2026: false }
+  ];
+
+  // Сводные эффекты (данные из III)
+  const effectsData = [
+    { category: 'Уменьшение издержек внутри ведомства', items: [
+      { name: 'Сокращение расходов', count2025: 0, value2025: null, economy2025: null, count2026: 0, value2026: null, economy2026: null },
+      { name: 'Снижение трудозатрат', count2025: 0, value2025: null, economy2025: null, count2026: 2, value2026: 56.1, economy2026: 58262.8 }
+    ]},
+    { category: 'Увеличение дохода в бюджет', items: [
+      { name: 'Рост поступлений за счет налогов и сборов', count2025: 0, value2025: null, economy2025: null, count2026: 0, value2026: null, economy2026: null },
+      { name: 'Рост поступлений за счет штрафов', count2025: 0, value2025: null, economy2025: null, count2026: 0, value2026: null, economy2026: null }
+    ]},
+    { category: 'Снижение издержек на получение госуслуг', items: [
+      { name: 'Снижение количества обращений', count2025: 0, value2025: null, economy2025: null, count2026: 0, value2026: null, economy2026: null },
+      { name: 'Сокращение времени оформления услуги', count2025: 12, value2025: 1.2, economy2025: 9636.3, count2026: 3, value2026: 76.0, economy2026: 416040.0 },
+      { name: 'Увеличение количества услуг по одному заявлению', count2025: 0, value2025: null, economy2025: null, count2026: 0, value2026: null, economy2026: null },
+      { name: 'Снижение обращений в ведомства по итогам оказания услуг', count2025: 0, value2025: null, economy2025: null, count2026: 0, value2026: null, economy2026: null }
+    ]},
+    { category: 'Повышение удовлетворенности потребителей', items: [
+      { name: 'Сокращение сроков предоставления услуги', count2025: 0, value2025: null, economy2025: null, count2026: 1, value2026: 0.0, economy2026: 10835.4 },
+      { name: 'Снижение доли отказов', count2025: 0, value2025: null, economy2025: null, count2026: 1, value2026: 1.0, economy2026: 198.0 },
+      { name: 'Повышение общей оценки удовлетворенности', count2025: 11, value2025: 1073.1, economy2025: 3400.6, count2026: 0, value2026: null, economy2026: null },
+      { name: 'Снижение расходов потребителей за счет отказа от платных сервисов', count2025: 0, value2025: null, economy2025: null, count2026: 0, value2026: null, economy2026: null }
+    ]},
+    { category: 'Уменьшение административных барьеров', items: [
+      { name: 'Снижение количества запросов на одно юр. лицо от контрольно-надзорных органов', count2025: 0, value2025: null, economy2025: null, count2026: 0, value2026: null, economy2026: null },
+      { name: 'Снижение количества очных проверок', count2025: 0, value2025: null, economy2025: null, count2026: 0, value2026: null, economy2026: null },
+      { name: 'Снижение количества выставленных штрафов', count2025: 0, value2025: null, economy2025: null, count2026: 0, value2026: null, economy2026: null },
+      { name: 'Сокращение количества показателей в отчетных формах для бизнеса', count2025: 0, value2025: null, economy2025: null, count2026: 0, value2026: null, economy2026: null },
+      { name: 'Снижение частоты отчетности', count2025: 0, value2025: null, economy2025: null, count2026: 0, value2026: null, economy2026: null },
+      { name: 'Снижение количества очных визитов инспекторов', count2025: 0, value2025: null, economy2025: null, count2026: 0, value2026: null, economy2026: null }
+    ]},
+    { category: 'Снижение ущерба', items: [
+      { name: 'Снижение заболеваемости, смертности', count2025: 0, value2025: null, economy2025: null, count2026: 0, value2026: null, economy2026: null },
+      { name: 'Снижение количества инцидентов ЧП/ЧС', count2025: 0, value2025: null, economy2025: null, count2026: 1, value2026: null, economy2026: 2640.0 },
+      { name: 'Снижение случаев мошенничества', count2025: 0, value2025: null, economy2025: null, count2026: 0, value2026: null, economy2026: null },
+      { name: 'Снижение ущерба от мошенничества', count2025: 1, value2025: null, economy2025: 200000.0, count2026: 0, value2026: null, economy2026: null },
+      { name: 'Снижение экономического ущерба', count2025: 0, value2025: null, economy2025: null, count2026: 0, value2026: null, economy2026: null },
+      { name: 'Снижение рисков информационной безопасности', count2025: 0, value2025: null, economy2025: null, count2026: 0, value2026: null, economy2026: null },
+      { name: 'Снижение рисков отказа инфраструктуры', count2025: 0, value2025: null, economy2025: null, count2026: 0, value2026: null, economy2026: null }
+    ]}
+  ];
+
+  // Финансирование (данные I и II)
+  const financeSources = [
+    { name: 'Базовые БА, согласованные Минцифры', plan2025: 0, plan2026: 562.17, plan2027: 553.25, plan2028: 553.25, total: 1668.67 },
+    { name: 'Базовые БА, не согласованные Минцифры', plan2025: 0, plan2026: 0, plan2027: 0, plan2028: 0, total: 0 },
+    { name: 'Дополнительные БА, согласованные подкомиссией', plan2025: 0, plan2026: 0, plan2027: 0, plan2028: 0, total: 0 },
+    { name: 'Дополнительные БА, согласованные Минцифры', plan2025: 0, plan2026: 41.0, plan2027: 6.0, plan2028: 6.0, total: 53.0 },
+    { name: 'Дополнительные БА, не согласованные Минцифры', plan2025: 0, plan2026: 0, plan2027: 0, plan2028: 0, total: 0 }
+  ];
+  const totalFinance = { plan2025: 691.60, fact2025: 670.58, plan2026: 603.17, plan2027: 559.25, plan2028: 559.25, total: 1721.67 };
+
+  const financeDirections = [
+    { name: 'Создание и развитие ГИС и ИС', fact2024: 199.56, fact2025_foiv: 130.0, fact2025_ned: 0, plan2026_foiv: 198.25, plan2026_ned: 0, delta2026: 13.7, plan2026_2028_foiv: 616.04, plan2026_2028_ned: 0 },
+    { name: 'Эксплуатация и поддержка ГИС и ИС', fact2024: 401.25, fact2025_foiv: 82.38, fact2025_ned: 0, plan2026_foiv: 251.56, plan2026_ned: 0, delta2026: -90.7, plan2026_2028_foiv: 70.10, plan2026_2028_ned: 0 },
+    { name: 'Инфраструктура (развитие)', fact2024: 0, fact2025_foiv: 0, fact2025_ned: 0, plan2026_foiv: 1.74, plan2026_ned: 0, delta2026: null, plan2026_2028_foiv: 5.22, plan2026_2028_ned: 0 },
+    { name: 'Инфраструктура (эксплуатация и поддержка)', fact2024: 60.84, fact2025_foiv: 38.97, fact2025_ned: 0, plan2026_foiv: 241.79, plan2026_ned: 0, delta2026: 28.9, plan2026_2028_foiv: 977.31, plan2026_2028_ned: 0 }
+  ];
+
+  // Технологическая зрелость (пример)
+  const techMaturity = [
+    { domain: 'Импортозамещение', current: 3, target: 5 },
+    { domain: 'Искусственный интеллект', current: 2, target: 4 },
+    { domain: 'Облачные технологии', current: 4, target: 5 },
+    { domain: 'Кибербезопасность', current: 4, target: 5 },
+    { domain: 'Большие данные', current: 2, target: 4 }
+  ];
+
+  // ====== Рендер табов ======
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 0: return <EventsTab />;
+      case 1: return <OkrTab />;
+      case 2: return <SummaryResultsTab />;
+      case 3: return <EffectsTab />;
+      case 4: return <FinanceTab />;
+      case 5: return <MaturityTab />;
+      default: return null;
+    }
+  };
+
+  // ---------- КОМПОНЕНТЫ ТАБОВ ----------
+
+  const EventsTab = () => (
+    <div>
+      <h4 className="font-medium mb-4">Мероприятия программы</h4>
+      <table className="w-full text-sm border-collapse">
+        <thead><tr className="bg-gray-50"><th className="p-2 border">№</th><th className="p-2 border">Наименование</th><th className="p-2 border">Срок начала</th><th className="p-2 border">Срок окончания</th><th className="p-2 border">Ответственный</th><th className="p-2 border">Статус</th><th className="p-2 border">План</th><th className="p-2 border">Факт</th><th className="p-2 border">%</th></tr></thead>
+        <tbody>
+          {programEvents.map(e => (
+            <tr key={e.id} className="border-t">
+              <td className="p-2 border">{e.id}</td>
+              <td className="p-2 border">{e.name}</td>
+              <td className="p-2 border">{e.startDate}</td>
+              <td className="p-2 border">{e.endDate}</td>
+              <td className="p-2 border">{e.responsible}</td>
+              <td className="p-2 border"><span className={`px-2 py-0.5 rounded text-xs font-medium ${e.status === 'В работе' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-600'}`}>{e.status}</span></td>
+              <td className="p-2 border text-right">{e.planIndicator}</td>
+              <td className="p-2 border text-right">{e.factIndicator}</td>
+              <td className="p-2 border text-right">{e.percent}%</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+
+  const OkrTab = () => (
+    <div>
+      <h4 className="font-medium mb-4">ОКР и эффекты</h4>
+      {okrData.map((group, idx) => (
+        <details key={idx} className="mb-4 border rounded" open>
+          <summary className="p-3 bg-gray-50 font-medium text-sm">{group.name}</summary>
+          <div className="p-3">
+            {group.goals.map((g, i) => (
+              <div key={i} className="flex items-center justify-between py-2 border-b last:border-0">
+                <span className="text-sm">{g.name}</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-500">План: {g.plan}{g.unit}</span>
+                  <span className="text-sm font-medium">Факт: {g.fact}{g.unit}</span>
+                  <div className="w-24 bg-gray-200 rounded-full h-2">
+                    <div className={`h-2 rounded-full ${g.fact >= g.plan ? 'bg-green-500' : g.fact / g.plan >= 0.8 ? 'bg-yellow-500' : 'bg-red-500'}`} style={{ width: `${Math.min(100, (g.fact / g.plan) * 100)}%` }}></div>
+                  </div>
+                  <span className="text-xs font-medium">{Math.round((g.fact / g.plan) * 100)}%</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </details>
+      ))}
+    </div>
+  );
+
+  const SummaryResultsTab = () => (
+    <div>
+      <h4 className="font-medium mb-4">Сводные результаты (Госуслуги и ЖС)</h4>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <div>
+          <h5 className="text-sm font-semibold mb-2">2025-2027</h5>
+          <table className="w-full text-xs border-collapse">
+            <thead><tr className="bg-gray-50"><th className="p-2 border">Показатель</th><th className="p-2 border">План</th><th className="p-2 border">Факт (31.01.2026)</th><th className="p-2 border">ОКР</th></tr></thead>
+            <tbody>
+              {Object.entries(summaryResults).map(([key, val]) => (
+                <tr key={key} className="border-t">
+                  <td className="p-2 border">{key}</td>
+                  <td className="p-2 border text-right">{val.plan2025_2027}</td>
+                  <td className="p-2 border text-right">{val.fact2025_2027}</td>
+                  <td className="p-2 border text-right">{val.okr}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div>
+          <h5 className="text-sm font-semibold mb-2">2026-2028</h5>
+          <table className="w-full text-xs border-collapse">
+            <thead><tr className="bg-gray-50"><th className="p-2 border">Показатель</th><th className="p-2 border">План</th><th className="p-2 border">Факт</th><th className="p-2 border">ОКР</th></tr></thead>
+            <tbody>
+              {Object.entries(summaryResults).map(([key, val]) => (
+                <tr key={key} className="border-t">
+                  <td className="p-2 border">{key}</td>
+                  <td className="p-2 border text-right">{val.plan2026_2028}</td>
+                  <td className="p-2 border text-right">{val.fact2026_2028}</td>
+                  <td className="p-2 border text-right">{val.okr}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <details className="mb-4 border rounded">
+        <summary className="p-3 bg-gray-50 font-medium text-sm">Детализация рефакторинга (1.2)</summary>
+        <div className="overflow-x-auto p-3">
+          <table className="w-full text-xs border-collapse">
+            <thead><tr className="bg-gray-100"><th className="p-2 border">№</th><th className="p-2 border">Наименование</th><th className="p-2 border">CSI</th><th className="p-2 border">Заявлений</th><th className="p-2 border">Отказы,%</th><th className="p-2 border">Положит.,%</th><th className="p-2 border">Ошибки,%</th><th className="p-2 border">Черновики,%</th><th className="p-2 border">Сред. время, с</th><th className="p-2 border">Без визита</th><th className="p-2 border">ЕПГУ</th><th className="p-2 border">ЛиР</th><th className="p-2 border">Витрина</th><th className="p-2 border">КП 2026</th></tr></thead>
+            <tbody>
+              {refactoringDetails.map(d => (
+                <tr key={d.id} className="border-t">
+                  <td className="p-2 border">{d.id}</td>
+                  <td className="p-2 border">{d.name}</td>
+                  <td className="p-2 border text-right">{d.csi ?? '-'}</td>
+                  <td className="p-2 border text-right">{d.applications ?? '-'}</td>
+                  <td className="p-2 border text-right">{d.rejections ?? '-'}</td>
+                  <td className="p-2 border text-right">{d.positive ?? '-'}</td>
+                  <td className="p-2 border text-right">{d.errors ?? '-'}</td>
+                  <td className="p-2 border text-right">{d.drafts ?? '-'}</td>
+                  <td className="p-2 border text-right">{d.avgTime ? Math.round(d.avgTime) : '-'}</td>
+                  <td className="p-2 border">{d.noVisit}</td>
+                  <td className="p-2 border">{d.epgu}</td>
+                  <td className="p-2 border">{d.lir}</td>
+                  <td className="p-2 border">{d.vitrina}</td>
+                  <td className="p-2 border">{d.plan2026 ? 'Да' : 'Нет'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </details>
+    </div>
+  );
+
+  const EffectsTab = () => (
+    <div>
+      <h4 className="font-medium mb-4">Сводные эффекты</h4>
+      {effectsData.map((cat, idx) => (
+        <details key={idx} className="mb-4 border rounded" open>
+          <summary className="p-3 bg-gray-50 font-medium text-sm">{cat.category}</summary>
+          <div className="overflow-x-auto p-3">
+            <table className="w-full text-xs border-collapse">
+              <thead><tr className="bg-gray-100">
+                <th className="p-2 border">Эффект</th>
+                <th className="p-2 border" colSpan={3}>2025-2027</th>
+                <th className="p-2 border" colSpan={3}>2026-2028</th>
+              </tr>
+              <tr className="bg-gray-50">
+                <th className="p-2 border"></th>
+                <th className="p-2 border">Кол-во</th><th className="p-2 border">Значение</th><th className="p-2 border">Экономия</th>
+                <th className="p-2 border">Кол-во</th><th className="p-2 border">Значение</th><th className="p-2 border">Экономия</th>
+              </tr></thead>
+              <tbody>
+                {cat.items.map((item, i) => (
+                  <tr key={i} className="border-t">
+                    <td className="p-2 border">{item.name}</td>
+                    <td className="p-2 border text-right">{item.count2025}</td>
+                    <td className="p-2 border text-right">{item.value2025 ?? '-'}</td>
+                    <td className="p-2 border text-right">{item.economy2025 ? item.economy2025.toLocaleString() : '-'}</td>
+                    <td className="p-2 border text-right">{item.count2026}</td>
+                    <td className="p-2 border text-right">{item.value2026 ?? '-'}</td>
+                    <td className="p-2 border text-right">{item.economy2026 ? item.economy2026.toLocaleString() : '-'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </details>
+      ))}
+    </div>
+  );
+
+  const FinanceTab = () => (
+    <div>
+      <h4 className="font-medium mb-4">Финансирование</h4>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <div>
+          <h5 className="text-sm font-semibold mb-2">Источники финансирования (млн руб.)</h5>
+          <table className="w-full text-xs border-collapse">
+            <thead><tr className="bg-gray-50"><th className="p-2 border">Источник</th><th className="p-2 border">2025</th><th className="p-2 border">2026</th><th className="p-2 border">2027</th><th className="p-2 border">2028</th><th className="p-2 border">Итого</th></tr></thead>
+            <tbody>
+              {financeSources.map((s, i) => (
+                <tr key={i} className="border-t">
+                  <td className="p-2 border">{s.name}</td>
+                  <td className="p-2 border text-right">{s.plan2025 > 0 ? s.plan2025.toFixed(2) : '-'}</td>
+                  <td className="p-2 border text-right">{s.plan2026 > 0 ? s.plan2026.toFixed(2) : '-'}</td>
+                  <td className="p-2 border text-right">{s.plan2027 > 0 ? s.plan2027.toFixed(2) : '-'}</td>
+                  <td className="p-2 border text-right">{s.plan2028 > 0 ? s.plan2028.toFixed(2) : '-'}</td>
+                  <td className="p-2 border text-right font-medium">{s.total > 0 ? s.total.toFixed(2) : '-'}</td>
+                </tr>
+              ))}
+              <tr className="border-t bg-blue-50 font-medium">
+                <td className="p-2 border">Итого</td>
+                <td className="p-2 border text-right">{totalFinance.plan2025.toFixed(2)} (факт: {totalFinance.fact2025.toFixed(2)})</td>
+                <td className="p-2 border text-right">{totalFinance.plan2026.toFixed(2)}</td>
+                <td className="p-2 border text-right">{totalFinance.plan2027.toFixed(2)}</td>
+                <td className="p-2 border text-right">{totalFinance.plan2028.toFixed(2)}</td>
+                <td className="p-2 border text-right">{totalFinance.total.toFixed(2)}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div>
+          <h5 className="text-sm font-semibold mb-2">Объёмы финансирования по направлениям (млн руб.)</h5>
+          <table className="w-full text-xs border-collapse">
+            <thead><tr className="bg-gray-50"><th className="p-2 border">Направление</th><th className="p-2 border">2024</th><th className="p-2 border">2025 (ФОИВ/НЭД)</th><th className="p-2 border">2026 (ФОИВ)</th><th className="p-2 border">Δ%, 26/25</th><th className="p-2 border">2026-2028 (ФОИВ)</th></tr></thead>
+            <tbody>
+              {financeDirections.map((d, i) => (
+                <tr key={i} className="border-t">
+                  <td className="p-2 border">{d.name}</td>
+                  <td className="p-2 border text-right">{d.fact2024 ? d.fact2024.toFixed(2) : '-'}</td>
+                  <td className="p-2 border text-right">{d.fact2025_foiv ? `${d.fact2025_foiv.toFixed(2)} / ${d.fact2025_ned.toFixed(2)}` : '-'}</td>
+                  <td className="p-2 border text-right">{d.plan2026_foiv ? d.plan2026_foiv.toFixed(2) : '-'}</td>
+                  <td className={`p-2 border text-right font-medium ${d.delta2026 !== null ? (d.delta2026 >= 0 ? 'text-green-600' : 'text-red-600') : ''}`}>{d.delta2026 !== null ? (d.delta2026 > 0 ? '+' : '') + d.delta2026.toFixed(1) + '%' : '-'}</td>
+                  <td className="p-2 border text-right">{d.plan2026_2028_foiv ? d.plan2026_2028_foiv.toFixed(2) : '-'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div className="mt-4">
+        <h5 className="text-sm font-semibold mb-2">Кассовое исполнение 2025</h5>
+        <div className="flex items-center gap-4">
+          <div className="w-64 bg-gray-200 rounded-full h-4">
+            <div className="bg-blue-500 h-4 rounded-full" style={{ width: `${(totalFinance.fact2025 / totalFinance.plan2025) * 100}%` }}></div>
+          </div>
+          <span className="text-sm font-medium">{((totalFinance.fact2025 / totalFinance.plan2025) * 100).toFixed(1)}%</span>
+        </div>
+      </div>
+    </div>
+  );
+
+  const MaturityTab = () => (
+    <div>
+      <h4 className="font-medium mb-4">Технологическая зрелость</h4>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <table className="w-full text-sm border-collapse">
+            <thead><tr className="bg-gray-50"><th className="p-2 border">Направление</th><th className="p-2 border">Текущий уровень</th><th className="p-2 border">Целевой уровень</th></tr></thead>
+            <tbody>
+              {techMaturity.map((t, i) => (
+                <tr key={i} className="border-t">
+                  <td className="p-2 border">{t.domain}</td>
+                  <td className="p-2 border text-center">{t.current}</td>
+                  <td className="p-2 border text-center">{t.target}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div>
+          <h5 className="text-sm font-semibold mb-2">Уровень зрелости</h5>
+          <ResponsiveContainer width="100%" height={250}>
+            <BarChart data={techMaturity} layout="vertical">
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis type="number" domain={[0, 5]} />
+              <YAxis type="category" dataKey="domain" width={150} />
+              <Tooltip />
+              <Bar dataKey="current" fill="#3b82f6" name="Текущий" />
+              <Bar dataKey="target" fill="#10b981" name="Целевой" />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-xl p-6 max-w-6xl w-full max-h-[95vh] overflow-auto shadow-lg">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-semibold">Показатели ВПЦТ</h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">✕</button>
+        </div>
+        {/* Табы */}
+        <div className="flex gap-2 border-b mb-4 pb-2 flex-wrap">
+          {tabs.map((tab, idx) => (
+            <button
+              key={idx}
+              onClick={() => setActiveTab(idx)}
+              className={`px-4 py-2 text-sm rounded-t-lg transition ${activeTab === idx ? 'bg-brand-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
+        {renderTabContent()}
+      </div>
+    </div>
+  );
+};
 
 export default function Projects() {
   const [projects, setProjects] = useState(projectsData.map(p => ({ ...p, responsible: null })));
