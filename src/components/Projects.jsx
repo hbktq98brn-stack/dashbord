@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { employees } from '../data/employees';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 // ---------- Мок-данные проектов ----------
 const projectsData = [
