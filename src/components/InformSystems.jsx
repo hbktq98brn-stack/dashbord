@@ -166,22 +166,24 @@ export default function InformSystems() {
           return (
             <div
               key={system.key}
-              className={`metric-card p-4 rounded-xl cursor-pointer hover:shadow-md transition-shadow ${statusClasses[status]} relative h-56 flex flex-col`}
+              className={`metric-card p-4 rounded-xl cursor-pointer hover:shadow-md transition-shadow ${statusClasses[status]} relative h-64 flex flex-col`}
               onClick={() => setActiveSystem(system)}
             >
               <div className="absolute top-2 right-2 text-xs text-gray-500">
                 Документов: {Object.values(system.documents).flat().length}
               </div>
               <h3 className="text-base font-semibold text-gray-800 mb-2 mt-4 pr-16">{system.title}</h3>
-              <p className="text-xs text-gray-500 flex-1 line-clamp-2">{system.fullName}</p>
+              <p className="text-xs text-gray-500 line-clamp-2 mb-2" title={system.fullName}>
+                {system.fullName}
+              </p>
 
-              <div className="mt-2 space-y-1" onClick={e => e.stopPropagation()}>
-                <div>
+              <div className="mt-auto" onClick={e => e.stopPropagation()}>
+                <div className="mb-1">
                   <label className="text-xs text-gray-400">Ответственный:</label>
                   <select
                     value={assignments.responsible || ''}
                     onChange={e => handleAssignChange(system.key, 'responsible', e.target.value)}
-                    className="w-full text-xs border rounded p-1 mt-1"
+                    className="w-full text-xs border rounded p-1 mt-0.5"
                   >
                     <option value="">Не назначен</option>
                     {employees.map(emp => (
@@ -194,7 +196,7 @@ export default function InformSystems() {
                   <select
                     value={assignments.developer || ''}
                     onChange={e => handleAssignChange(system.key, 'developer', e.target.value)}
-                    className="w-full text-xs border rounded p-1 mt-1"
+                    className="w-full text-xs border rounded p-1 mt-0.5"
                   >
                     <option value="">Не назначен</option>
                     {employees.map(emp => (
