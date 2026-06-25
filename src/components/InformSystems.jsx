@@ -131,9 +131,10 @@ const systemsData = [
 
 export default function InformSystems() {
   const [activeSystem, setActiveSystem] = useState(null);
+  // Состояние для хранения ответственных и разработчиков – теперь массивы id
   const [systemAssignments, setSystemAssignments] = useState(() => {
     const init = {};
-    systemsData.forEach(s => { init[s.key] = { responsible: null, developer: null }; });
+    systemsData.forEach(s => { init[s.key] = { responsible: [], developer: [] }; });
     return init;
   });
 
@@ -144,14 +145,18 @@ export default function InformSystems() {
     red: 'status-red bg-red-50'
   };
 
-  const handleAssignChange = (systemKey, role, employeeId) => {
-    setSystemAssignments(prev => ({
-      ...prev,
-      [systemKey]: {
-        ...prev[systemKey],
-        [role]: employeeId ? Number(employeeId) : null
-      }
-    }));
+  // Переключение сотрудника в массиве (role – 'responsible' или 'developer')
+  const toggleAssignment = (systemKey, role, employeeId) => {
+    setSystemAssignments(prev => {
+      const current = prev[systemKey]?.[role] || [];
+      const updated = current.includes(employeeId)
+        ? current.filter(id => id !== employeeId)
+        : [...current, employeeId];
+      return {
+        ...prev,
+        [systemKey]: { ...prev[systemKey], [role]: updated }
+      };
+    });
   };
 
   const getEmployeeById = (id) => employees.find(e => e.id === id);
@@ -161,7 +166,9 @@ export default function InformSystems() {
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {systemsData.map(system => {
           const status = getStatus();
-          const assignments = systemAssignments[system.key] || { responsible: null, developer: null };
+          const assignments = systemAssignments[system.key] || { responsible: [], developer: [] };
+          const respList = (assignments.responsible || []).map(id => getEmployeeById(id)).filter(Boolean);
+          const devList = (assignments.developer || []).map(id => getEmployeeById(id)).filter(Boolean);
 
           return (
             <div
@@ -177,32 +184,37 @@ export default function InformSystems() {
                 {system.fullName}
               </p>
 
-              <div className="mt-auto" onClick={e => e.stopPropagation()}>
-                <div className="mb-1">
+              {/* Мультиселект для ответственных */}
+              <div className="mt-auto space-y-1" onClick={e => e.stopPropagation()}>
+                <div>
                   <label className="text-xs text-gray-400">Ответственный:</label>
-                  <select
-                    value={assignments.responsible || ''}
-                    onChange={e => handleAssignChange(system.key, 'responsible', e.target.value)}
-                    className="w-full text-xs border rounded p-1 mt-0.5"
-                  >
-                    <option value="">Не назначен</option>
-                    {employees.map(emp => (
-                      <option key={emp.id} value={emp.id}>{getEmployeeLabel(emp)}</option>
-                    ))}
-                  </select>
+                  <MultiSelect
+                    items={employees}
+                    selectedIds={assignments.responsible || []}
+                    onChange={(id) => toggleAssignment(system.key, 'responsible', id)}
+                    placeholder="Не назначен"
+                    getLabel={getEmployeeLabel}
+                  />
+                  {respList.length > 0 && (
+                    <p className="text-xs text-gray-600 mt-0.5">
+                      {respList.map(e => e.name.split(' ')[0]).join(', ')}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <label className="text-xs text-gray-400">Разработчик:</label>
-                  <select
-                    value={assignments.developer || ''}
-                    onChange={e => handleAssignChange(system.key, 'developer', e.target.value)}
-                    className="w-full text-xs border rounded p-1 mt-0.5"
-                  >
-                    <option value="">Не назначен</option>
-                    {employees.map(emp => (
-                      <option key={emp.id} value={emp.id}>{getEmployeeLabel(emp)}</option>
-                    ))}
-                  </select>
+                  <MultiSelect
+                    items={employees}
+                    selectedIds={assignments.developer || []}
+                    onChange={(id) => toggleAssignment(system.key, 'developer', id)}
+                    placeholder="Не назначен"
+                    getLabel={getEmployeeLabel}
+                  />
+                  {devList.length > 0 && (
+                    <p className="text-xs text-gray-600 mt-0.5">
+                      {devList.map(e => e.name.split(' ')[0]).join(', ')}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
@@ -222,12 +234,12 @@ export default function InformSystems() {
               <p className="text-sm">{activeSystem.fullName}</p>
               {systemAssignments[activeSystem.key] && (
                 (() => {
-                  const resp = getEmployeeById(systemAssignments[activeSystem.key].responsible);
-                  const dev = getEmployeeById(systemAssignments[activeSystem.key].developer);
+                  const respList = (systemAssignments[activeSystem.key].responsible || []).map(id => getEmployeeById(id)).filter(Boolean);
+                  const devList = (systemAssignments[activeSystem.key].developer || []).map(id => getEmployeeById(id)).filter(Boolean);
                   return (
                     <div className="mt-2 flex gap-4 text-xs">
-                      <p><span className="font-medium">Ответственный:</span> {resp ? resp.name : 'не назначен'}</p>
-                      <p><span className="font-medium">Разработчик:</span> {dev ? dev.name : 'не назначен'}</p>
+                      <p><span className="font-medium">Ответственные:</span> {respList.length > 0 ? respList.map(e => e.name).join(', ') : 'не назначены'}</p>
+                      <p><span className="font-medium">Разработчики:</span> {devList.length > 0 ? devList.map(e => e.name).join(', ') : 'не назначены'}</p>
                     </div>
                   );
                 })()
@@ -255,6 +267,44 @@ export default function InformSystems() {
               </details>
             ))}
           </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Компонент мультиселекта (выпадающий список с чекбоксами)
+function MultiSelect({ items, selectedIds, onChange, placeholder, getLabel }) {
+  const [open, setOpen] = useState(false);
+
+  const selectedItems = items.filter(item => selectedIds.includes(item.id));
+  const displayText = selectedItems.length > 0
+    ? selectedItems.slice(0, 2).map(item => getLabel(item).split(' ')[0]).join(', ') + (selectedItems.length > 2 ? ` +${selectedItems.length - 2}` : '')
+    : placeholder;
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        className="w-full text-xs border rounded p-1 bg-white flex justify-between items-center"
+        onClick={() => setOpen(!open)}
+      >
+        <span className="truncate text-left">{displayText}</span>
+        <span className="ml-1 text-gray-400">▼</span>
+      </button>
+      {open && (
+        <div className="absolute z-20 left-0 right-0 mt-1 bg-white border rounded shadow-lg max-h-40 overflow-y-auto">
+          {items.map(item => (
+            <label key={item.id} className="flex items-center gap-2 px-3 py-1 hover:bg-gray-100 text-xs cursor-pointer">
+              <input
+                type="checkbox"
+                checked={selectedIds.includes(item.id)}
+                onChange={() => onChange(item.id)}
+                className="rounded"
+              />
+              {getLabel(item)}
+            </label>
+          ))}
         </div>
       )}
     </div>
